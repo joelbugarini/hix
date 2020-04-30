@@ -1,7 +1,7 @@
 # hix
 hix active code generator written in haskell
 
-The main idea behind this generator is to create/modify templates as easily as possible, so it can grow with your project.
+The main idea behind this generator is to create/modify templates as easily as possible, so they can grow with your project.
 
 Based on this lecture:
 https://stackoverflow.com/questions/13666150/how-to-implement-lexical-analyser-and-parser-in-haskell
