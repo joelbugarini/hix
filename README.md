@@ -1,4 +1,4 @@
-# Hix 🯩 — Flexible Code Generator
+# Hix 🧩 — Flexible Code Generator
 
 **Hix** is a flexible, template-driven code generator written in Haskell.  
 It uses model definitions (in JSON) and dynamic templates to generate custom code with loops, conditionals, and formatting functions.
@@ -11,11 +11,11 @@ It uses model definitions (in JSON) and dynamic templates to generate custom cod
 ## ✨ Features
 
 - 🔁 `[[prop]]` loops over model properties
-- \2753 `[[if ...]]`, `[[else]]` conditionals
+- ❓ `[[if ...]]`, `[[else]]` conditionals
 - 🔤 Text transformation functions: `[[upper ...]]`, `[[lower ...]]`, `[[snake_case ...]]`
 - 🧠 Full AST parser and golden test suite
 - 🎨 VS Code / TextMate grammar for syntax highlighting
-- �� Windows installer with PATH integration
+- 🪟 Windows installer with PATH integration
 
 ---
 
