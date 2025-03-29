@@ -1,0 +1,30 @@
+{
+    "name": "hix-syntax",
+    "displayName": "Hix Templates",
+    "description": "Syntax highlighting for Hix template files",
+    "version": "0.0.8",
+    "repository": { "url": ""},
+    "publisher": "your-name",
+    "engines": {
+      "vscode": "^1.60.0"
+    },
+    "categories": ["Languages"],
+    "contributes": {
+      "languages": [
+        {
+          "id": "hix",
+          "aliases": ["Hix", "hix"],
+          "extensions": [".hix"],
+          "configuration": "./language-configuration.json"
+        }
+      ],
+      "grammars": [
+        {
+          "language": "hix",
+          "scopeName": "source.hix",
+          "path": "./hix.tmLanguage.json"
+        }
+      ]
+    }
+  }
+  

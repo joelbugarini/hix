@@ -1,0 +1,8 @@
+<form>
+  <label>FirstName</label>
+  <input type="text" name="FirstName">
+  <label>BirthDate</label>
+  <input type="date" name="BirthDate">
+  <label>Agree</label>
+  <input type="checkbox" name="Agree">
+</form>

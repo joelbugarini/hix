@@ -1,0 +1,3 @@
+public class [[model.className]] {
+[[prop]][[prop.type]] [[prop.name]];
+[[/prop]]}

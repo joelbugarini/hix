@@ -1,0 +1,49 @@
+# Haskell - Stack and Cabal
+.stack-work/
+dist/
+dist-newstyle/
+*.hi
+*.o
+*.dyn_o
+*.dyn_hi
+*.prof
+*.aux
+*.hp
+*.eventlog
+
+# Executables and installers
+*.exe
+*.out
+*.bin
+*.dll
+
+# VSCode and other IDEs
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Inno Setup Output
+utils/installer/output/
+*.iss.bak
+
+# MacOS / Windows / Linux cruft
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# Syntax highlight grammar builds
+*.tmLanguage.json
+*.tmTheme
+*.sublime-syntax
+
+# Logs
+*.log
+
+# Cabal sandbox (if ever used)
+cabal.sandbox.config
+cabal.config
+
+# Global Stack config override (keep only local stack.yaml)
+.stack-work-install/

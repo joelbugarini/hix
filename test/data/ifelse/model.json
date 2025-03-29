@@ -1,0 +1,8 @@
+{
+    "className": "Settings",
+    "properties": [
+      { "name": "IsAdmin", "type": "bool" },
+      { "name": "Username", "type": "string" }
+    ]
+  }
+  

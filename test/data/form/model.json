@@ -1,0 +1,9 @@
+{
+    "className": "FormModel",
+    "properties": [
+      { "name": "FirstName", "type": "string" },
+      { "name": "BirthDate", "type": "datetime" },
+      { "name": "Agree", "type": "bool" }
+    ]
+  }
+  

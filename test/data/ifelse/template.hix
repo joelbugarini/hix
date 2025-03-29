@@ -1,0 +1,11 @@
+<form>
+[[prop]]
+[[if prop.type=bool]]
+  <label>[[prop.name]]</label>
+  <input type="checkbox" name="[[prop.name]]">
+[[else]]
+  <label>[[prop.name]]</label>
+  <input type="text" name="[[prop.name]]">
+[[/if]]
+[[/prop]]
+</form>

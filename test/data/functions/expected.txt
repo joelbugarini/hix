@@ -1,0 +1,14 @@
+// TESTMODEL
+
+// ORIGINAL: FirstName
+// UPPER: FIRSTNAME
+// LOWER: firstname
+// SNAKE: first_name
+// ORIGINAL: BirthDate
+// UPPER: BIRTHDATE
+// LOWER: birthdate
+// SNAKE: birth_date
+// ORIGINAL: IsAdmin
+// UPPER: ISADMIN
+// LOWER: isadmin
+// SNAKE: is_admin

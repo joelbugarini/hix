@@ -1,0 +1,9 @@
+{
+    "className": "TestModel",
+    "properties": [
+      { "name": "FirstName", "type": "string" },
+      { "name": "BirthDate", "type": "datetime" },
+      { "name": "IsAdmin", "type": "bool" }
+    ]
+  }
+  

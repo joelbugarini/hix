@@ -1,0 +1,4 @@
+public class Person {
+string Name;
+int Age;
+}

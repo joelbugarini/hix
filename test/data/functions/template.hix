@@ -1,0 +1,8 @@
+// [[upper model.className]]
+
+[[prop]]
+// ORIGINAL: [[prop.name]]
+// UPPER: [[upper prop.name]]
+// LOWER: [[lower prop.name]]
+// SNAKE: [[snake_case prop.name]]
+[[/prop]]

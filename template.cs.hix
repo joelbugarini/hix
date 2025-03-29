@@ -1,0 +1,19 @@
+<form>
+[[prop]]
+[[if prop.name=Id]]
+  <label>[[prop.name]]</label>
+[[/if]]
+[[if prop.type=string]]
+  <label>[[prop.name]]</label>
+  <input type="text" name="[[prop.name]]">
+[[/if]]
+[[if prop.type=datetime]]
+  <label>[[snake_case prop.name]]</label>
+  <input type="date" name="[[prop.name]]">
+[[/if]]
+[[if prop.type=bool]]
+  <label>[[prop.name]]</label>
+  <input type="checkbox" name="[[prop.name]]">
+[[/if]]
+[[/prop]]
+</form>

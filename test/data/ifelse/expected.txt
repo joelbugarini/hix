@@ -1,0 +1,6 @@
+<form>
+  <label>IsAdmin</label>
+  <input type="checkbox" name="IsAdmin">
+  <label>Username</label>
+  <input type="text" name="Username">
+</form>
