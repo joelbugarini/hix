@@ -6,6 +6,12 @@ It uses model definitions (in JSON) and dynamic templates to generate custom cod
 > ✅ Version: `v0.1`  
 > 📦 Includes: CLI tool, Windows installer, syntax highlighter
 
+## Documentation
+
+Full documentation is available at:
+
+📄 [https://joelbugarini.github.io/hix/](https://joelbugarini.github.io/hix/)
+
 ---
 
 ## ✨ Features

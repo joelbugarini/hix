@@ -18,6 +18,17 @@ Whether you're generating classes, config files, or scaffolding code, Hix combin
 
 ---
 
+## Download
+
+Ready to use Hix on Windows?
+
+📦 [Download Hix v0.1 for Windows](https://github.com/joelbugarini/hix/releases/download/v0.1/hix-setup.exe)
+
+🔗 [View on GitHub](https://github.com/joelbugarini/hix)
+
+
+---
+
 ## Quick Example
 
 Given this model:
