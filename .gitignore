@@ -47,3 +47,9 @@ cabal.config
 
 # Global Stack config override (keep only local stack.yaml)
 .stack-work-install/
+
+# MkDocs build directory
+site/
+
+# Local cache
+.mkdocs/

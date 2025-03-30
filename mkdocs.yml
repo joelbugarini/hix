@@ -1,0 +1,14 @@
+site_name: Hix
+repo_url: https://github.com/joelbugarini/hix
+theme:
+  name: material
+
+nav:
+  - Home: index.md
+  - Usage: usage.md
+  - Template Syntax: templates.md
+  - Advanced: advanced.md
+  - Real World Usecases: real-world-usecase.md
+  - Roadmap: roadmap.md
+
+docs_dir: docs
