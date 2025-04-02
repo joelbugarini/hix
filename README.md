@@ -1,10 +1,23 @@
 # Hix 🧩 — Flexible Code Generator
 
-**Hix** is a flexible, template-driven code generator written in Haskell.  
-It uses model definitions (in JSON) and dynamic templates to generate custom code with loops, conditionals, and formatting functions.
+ **Stop rewriting boilerplate. Start generating structure.**
 
-> ✅ Version: `v0.1`  
-> 📦 Includes: CLI tool, Windows installer, syntax highlighter
+ **Hix** is a template-driven code generator that turns simple JSON models into full-featured source code — from backend models and database schema to HTML forms and API handlers.
+
+ Designed for developers who value consistency, automation, and clean architecture, Hix helps you build smarter, faster, and with fewer bugs.
+
+ - 🔁 One model → many files
+ - 🧩 Template everything: Python, TypeScript, HTML, SQL, C#, you name it
+ - ⚙️ Drop-in CLI with Windows installer and editor integration
+ - 🧠 Built with Haskell for safe, predictable rendering
+
+ _“Build once. Template forever. Let Hix do the repetition.”_
+
+# Hix 🧩 – Flexible Code Generator
+
+**Hix** is a flexible, template-driven code generator for developers who love clean, structured automation.**
+
+Whether you're generating classes, config files, or scaffolding code, Hix combines the power of JSON models and expressive templates to deliver clean, readable output.
 
 ## Documentation
 
