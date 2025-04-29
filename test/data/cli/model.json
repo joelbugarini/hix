@@ -1,0 +1,17 @@
+{
+  "className": "User",
+  "properties": [
+    {
+      "name": "Id",
+      "type": "int"
+    },
+    {
+      "name": "Name",
+      "type": "string"
+    },
+    {
+      "name": "Email",
+      "type": "string"
+    }
+  ]
+} 

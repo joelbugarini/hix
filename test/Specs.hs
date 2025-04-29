@@ -8,15 +8,45 @@ import qualified Data.Text.Encoding as TE
 import qualified Data.ByteString.Lazy as BL
 import System.FilePath ((</>))
 import Data.Char (isSpace)
+import System.Directory (createDirectoryIfMissing, removeDirectoryRecursive, removeFile)
+import System.IO.Silently (capture_)
+import System.Process (readProcess, readProcessWithExitCode)
+import System.Exit (ExitCode(ExitSuccess))
 
 import Lexer (tokenize)
 import TemplateAST (parseTokens, AST(..))
-import Model (Model(..), Property(..))
+import Model (Model(..), Property(..), PropertyType(..))
 import Renderer (renderAST)
 import qualified Data.Aeson as Aeson
+import HelpSpec
+
+helpMessage :: String
+helpMessage = init $ unlines
+  [ "hix - A code generation tool for clean architecture"
+  , ""
+  , "Usage:"
+  , "  hix [command] [options]"
+  , ""
+  , "Commands:"
+  , "  init           Initialize a new hix project"
+  , "  help           Show this help message"
+  , "  man            Show detailed manual"
+  , "  version        Show version information"
+  , ""
+  , "Options:"
+  , "  --help         Show this help message"
+  , "  --version      Show version information"
+  , ""
+  , "Examples:"
+  , "  hix init       Initialize a new hix project"
+  , "  hix help       Show this help message"
+  , "  hix version    Show version information"
+  , ""
+  ]
 
 main :: IO ()
 main = hspec $ do
+  helpSpec
 
   describe "Lexer" $ do
     it "tokenizes simple template" $
@@ -34,8 +64,8 @@ main = hspec $ do
   describe "Renderer" $ do
     it "renders a model class with props" $ do
       let model = Model "Thing"
-            [ Property "Id" "int"
-            , Property "Title" "string"
+            [ Property "Id" IntType
+            , Property "Title" StringType
             ]
           tokens = tokenize "public class [[model.className]] {\n[[prop]][[prop.type]] [[prop.name]];\n[[/prop]]}"
           ast = parseTokens tokens
@@ -44,15 +74,15 @@ main = hspec $ do
 
     it "renders if/else blocks correctly" $ do
       let model = Model "TestModel"
-            [ Property "IsAdmin" "bool"
-            , Property "Name" "string"
+            [ Property "IsAdmin" StringType
+            , Property "Name" StringType
             ]
           template = T.unlines
             [ "[[prop]]"
-            , "[[if prop.type=bool]]"
-            , "Checkbox: [[prop.name]]"
-            , "[[else]]"
+            , "[[if prop.type=string]]"
             , "Input: [[prop.name]]"
+            , "[[else]]"
+            , "Other: [[prop.name]]"
             , "[[/if]]"
             , "[[/prop]]"
             ]
@@ -60,17 +90,33 @@ main = hspec $ do
           ast = parseTokens tokens
           output = renderAST ast model
           expected = T.stripEnd $ T.unlines
-            [ "Checkbox: IsAdmin"
+            [ "Input: IsAdmin"
             , "Input: Name"
             ]
       removeBlankLines output `shouldBe` removeBlankLines expected
 
+  describe "CLI" $ do
+    it "handles model name replacement correctly" $ do
+      let dir = "test/data/cli"
+      template <- TIO.readFile (dir </> "template.hix")
+      modelJson <- TIO.readFile (dir </> "model.json")
+      expected <- TIO.readFile (dir </> "expected.txt")
+      case decodeModel modelJson of
+        Right model ->
+          let output = renderAST (parseTokens (tokenize template)) model
+           in removeBlankLines output `shouldBe` removeBlankLines expected
+        Left err -> expectationFailure $ "Failed to decode model: " ++ err
+
+    it "shows help message when no arguments provided" $ do
+      (exitCode, output, _) <- readProcessWithExitCode "stack" ["exec", "hix", "--"] ""
+      exitCode `shouldBe` ExitSuccess
+      output `shouldBe` helpMessage
 
   describe "Golden rendering" $ do
     goldenTest "example"
     goldenTest "form"
     goldenTest "functions"
-
+    goldenTest "cli"
 
 -- 🔍 Golden test for output comparison
 goldenTest :: FilePath -> Spec

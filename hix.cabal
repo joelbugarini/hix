@@ -21,13 +21,19 @@ library
     , TemplateAST
     , Renderer
     , GrammarGen
+    , Config
+    , Wizard
+    , Help
   hs-source-dirs:      src
   build-depends:
       base >= 4.7 && < 5
     , aeson
+    , aeson-extra
     , text
     , bytestring
     , filepath
+    , yaml
+    , directory
   default-language:    Haskell2010
 
 executable hix
@@ -39,6 +45,7 @@ executable hix
     , text
     , aeson
     , filepath
+    , directory
   default-language:    Haskell2010
   ghc-options:
     -Wall
@@ -56,6 +63,7 @@ test-suite hix-tests
   type:                exitcode-stdio-1.0
   hs-source-dirs:      test
   main-is:             Specs.hs
+  other-modules:       HelpSpec
   build-depends:
       base
     , hspec
@@ -64,4 +72,8 @@ test-suite hix-tests
     , filepath
     , bytestring
     , aeson
+    , silently
+    , process
+    , directory
+    , hspec-golden
   default-language:    Haskell2010

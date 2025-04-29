@@ -1,0 +1,52 @@
+# hix.config.yaml
+
+# The type of architecture (purely for documentation purposes)
+architecture: onion
+
+# Optional: global output directory (can be overridden per layer)
+output_root: ./sample
+
+# Layers configuration - flexible and customizable
+layers:
+  - name: Domain
+    path: ./sample/Domain
+    description: "Contains business logic and domain models"
+    templates:
+      - template_name: Entity
+        template: ./templates/entity.hix
+        output_by: model
+        filename: "{{model.name}}.cs"
+  
+  - name: Presentation
+    path: ./sample/Presentation
+    description: "Contains UI and API controllers"
+    templates:
+      - template_name: Controller
+        template: ./templates/controller.hix
+        output_by: model
+        filename: "{{model.name}}Controller.cs"
+      - template_name: View
+        template: ./templates/view.hix
+        output_by: model
+        filename: "{{model.name}}View.cs"
+  
+  - name: Infrastructure
+    path: ./sample/Infrastructure
+    description: "Contains technical implementations and external services"
+    templates: []
+
+# Optional: model source (default: current directory)
+models_path: ./models
+
+# Optional: global template path (can be overridden per template)
+templates_root: ./templates
+
+# Optional: naming conventions, filters, or custom variables
+naming:
+  model: PascalCase
+  property: camelCase
+
+# Optional: additional settings for future extensibility
+options:
+  overwrite_existing: false
+  dry_run: false 

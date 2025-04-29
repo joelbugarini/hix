@@ -3,17 +3,37 @@
 module Model
   ( Model(..)
   , Property(..)
+  , PropertyType(..)
   , loadModel
   ) where
 
 import Data.Aeson
 import qualified Data.ByteString.Lazy as B
 import Data.Text (Text)
+import qualified Data.Text as T
+import Data.Char (toLower)
+
+data PropertyType = IntType | StringType | DateTimeType | BoolType
+  deriving (Eq)
+
+instance Show PropertyType where
+  show IntType = "int"
+  show StringType = "string"
+  show DateTimeType = "datetime"
+  show BoolType = "bool"
+
+instance FromJSON PropertyType where
+  parseJSON = withText "PropertyType" $ \v -> case T.toLower v of
+    "int" -> pure IntType
+    "string" -> pure StringType
+    "datetime" -> pure DateTimeType
+    "bool" -> pure BoolType
+    _ -> fail $ "Unknown property type: " ++ show v
 
 data Property = Property
-  { name :: Text
-  , type_ :: Text
-  } deriving (Show)
+  { propName :: Text
+  , propType :: PropertyType
+  } deriving (Show, Eq)
 
 instance FromJSON Property where
   parseJSON = withObject "Property" $ \v ->
@@ -23,7 +43,7 @@ instance FromJSON Property where
 data Model = Model
   { className :: Text
   , properties :: [Property]
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 instance FromJSON Model where
   parseJSON = withObject "Model" $ \v ->

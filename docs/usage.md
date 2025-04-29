@@ -1,4 +1,164 @@
-# Usage
+# Usage Guide
+
+This guide explains how to use Hix for code generation in your projects.
+
+## Installation
+
+### Using Stack
+```bash
+stack install hix
+```
+
+### Using Cabal
+```bash
+cabal install hix
+```
+
+## Project Setup
+
+### Initialize a New Project
+```bash
+mkdir my-project
+cd my-project
+hix init
+```
+
+This creates the following structure:
+```
+.hix/
+├── config.yaml           # Configuration file
+├── .gitignore           # Git ignore rules for generated files
+├── models/              # Directory for model files
+├── output/              # Directory for generated code
+│   ├── Domain/         # Domain layer output
+│   ├── Application/    # Application layer output
+│   ├── Infrastructure/ # Infrastructure layer output
+│   └── Presentation/   # Presentation layer output
+└── templates/          # Directory for template files
+```
+
+## Basic Usage
+
+### 1. Create a Model
+Create a JSON file describing your model:
+
+```json
+{
+  "className": "User",
+  "properties": [
+    { "name": "Id", "type": "int" },
+    { "name": "Name", "type": "string" },
+    { "name": "Email", "type": "string" }
+  ]
+}
+```
+
+### 2. Generate Code
+Run Hix with your model file:
+
+```bash
+hix User.json
+```
+
+This will:
+1. Load the model from `User.json`
+2. Read the configuration from `.hix/config.yaml`
+3. Generate code for each layer according to the templates
+4. Output the generated files in their respective layer directories
+
+## Advanced Usage
+
+### Interactive Mode
+If you run Hix without arguments, it will prompt you for the model name:
+
+```bash
+hix
+# Then enter the model name when prompted
+```
+
+### Help and Documentation
+- Show basic help: `hix help` or `hix --help`
+- Show detailed manual: `hix man`
+- Show version: `hix version` or `hix --version`
+
+### Customizing Configuration
+Edit `.hix/config.yaml` to customize:
+- Architecture type (clean, onion, hexagonal)
+- Output paths
+- Layer configurations
+- Template mappings
+
+## Examples
+
+### Generate a Domain Entity
+1. Create a model file `User.json`:
+```json
+{
+  "className": "User",
+  "properties": [
+    { "name": "Id", "type": "int" },
+    { "name": "Name", "type": "string" }
+  ]
+}
+```
+
+2. Run Hix:
+```bash
+hix User.json
+```
+
+3. Check the generated files in `.hix/output/Domain/`
+
+### Using Templates
+1. Create a template in `.hix/templates/domain/Entity.hix`:
+```hix
+public class [[model.className]] {
+[[prop]]
+  private [[prop.type]] [[prop.name]];
+[[/prop]]
+}
+```
+
+2. Add the template to your config:
+```yaml
+layers:
+  - name: Domain
+    path: ./src/Domain
+    templates:
+      - name: Entity
+        filename: [[model.name]].java
+        template: templates/domain/Entity.hix
+```
+
+3. Generate code:
+```bash
+hix User.json
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **Model Not Found**
+   - Ensure the model file exists and is in the correct location
+   - Check file permissions
+
+2. **Configuration Errors**
+   - Verify `config.yaml` syntax
+   - Check template paths are correct
+
+3. **Template Errors**
+   - Check template syntax
+   - Verify all required model fields are present
+
+### Getting Help
+
+- Use `hix help` for basic command information
+- Use `hix man` for detailed documentation
+- Check the [documentation](docs/) for more information
+- Report issues on our [GitHub repository](https://github.com/yourusername/hix)
+
+---
 
 ## Running Hix
 

@@ -1,111 +1,86 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Main (main) where
+module Main where
 
-import System.Environment (getArgs)
-import qualified Data.Text.IO as TIO
 import qualified Data.Text as T
-import Data.Text (Text)
-import Data.Char (isSpace)
-import System.FilePath (takeBaseName)
-
-import Model (loadModel)
+import qualified Data.Text.IO as TIO
+import System.FilePath ((</>))
+import Data.Maybe (fromMaybe)
+import qualified Config as C
+import Model (loadModel, Model(..))
 import Renderer (renderAST)
-import Lexer (tokenize, Token(..))
+import Lexer (tokenize)
 import TemplateAST (parseTokens)
-import qualified GrammarGen (writeGrammarFile)
+import Data.Text (replace)
+import System.Environment (getArgs)
+import qualified Wizard as W
+import System.Directory (getCurrentDirectory)
+import Help (helpMessage, manualMessage, version)
 
 main :: IO ()
 main = do
   args <- getArgs
-  case args of    
-    ["--gen-grammar", out] -> 
-      GrammarGen.writeGrammarFile out
+  case args of
+    [] -> putStrLn helpMessage
+    ["--help"] -> putStrLn helpMessage
+    ["help"] -> putStrLn helpMessage
+    ["--version"] -> putStrLn version
+    ["version"] -> putStrLn version
+    ["man"] -> putStrLn manualMessage
+    ["init"] -> do
+      currentDir <- getCurrentDirectory
+      putStrLn "Initializing hix configuration..."
+      W.createDefaultConfig currentDir
+      putStrLn "Configuration created successfully!"
+      putStrLn "You can now customize the layers and templates in .hix/config.yaml"
+    
+    _ -> do
+      modelName <- case args of
+        (modelArg:_) -> return $ modelArg ++ ".json"
+        [] -> do
+          putStrLn "Please enter the model name (without .json extension):"
+          modelInput <- getLine
+          return $ modelInput ++ ".json"
+      
+      -- Load the model
+      modelResult <- loadModel modelName
+      case modelResult of
+        Left err -> putStrLn $ "Error loading model: " ++ err
+        Right model -> do
+          -- Load the config file
+          configResult <- C.loadConfig ".hix/config.yaml"
+          case configResult of
+            Left err -> putStrLn $ "Error loading config: " ++ err
+            Right config -> do
+              -- Print architecture info
+              putStrLn $ "Architecture: " ++ T.unpack (C.architecture config)
+              putStrLn $ "Output Root: " ++ fromMaybe "./src" (C.output_root config)
+              
+              -- Print layer info and generate code
+              mapM_ (\layer -> do
+                putStrLn $ T.unpack (C.name layer) ++ " Layer: " ++ C.path layer
+                putStrLn $ "Description: " ++ T.unpack (C.description layer)
+                generateCodeForLayer layer model) (C.layers config)
 
-    [templatePath, modelPath, outputPath] ->
-      runHix templatePath modelPath (Just outputPath)
+-- Function to generate code for a layer
+generateCodeForLayer :: C.Layer -> Model -> IO ()
+generateCodeForLayer layer model = mapM_ (generateTemplate layer model) (C.templates layer)
 
-    [templatePath, modelPath] ->
-      runHix templatePath modelPath Nothing
-
-    _ -> putStrLn "Usage: hix <template.hix> <model.json> [output.txt]"
-
--- 🔧 Main runner with optional output path logic
-runHix :: FilePath -> FilePath -> Maybe FilePath -> IO ()
-runHix templatePath modelPath mOut = do
-  -- 📄 Load template
-  template <- TIO.readFile templatePath
-
-  -- 🔍 Tokenize and check for suspicious tags
-  let tokens = tokenize template
-  mapM_ reportTagProblem tokens
-
-  -- 🌲 Parse tokens into AST
-  let ast = parseTokens tokens
-  -- putStrLn "\n Parsed AST:"
-  -- mapM_ print ast
-
-  -- 📦 Load model
-  result <- loadModel modelPath
-  case result of
-    Right model -> do
-      -- 🧾 Render output
-      let output = removeBlankLines $ renderAST ast model
-          outputFile = case mOut of
-            Just path -> path
-            Nothing ->
-              let base = takeBaseName modelPath
-              in case getTemplateOutputExt templatePath of
-                   Just ext -> base ++ "." ++ ext
-                   Nothing  -> base ++ ".txt"
-      TIO.writeFile outputFile output
-      putStrLn $ "Code written to " ++ outputFile
-    Left err -> putStrLn $ "Failed to parse model JSON: " ++ err
-
--- 📂 Extract extension before .hix (e.g. .cs from template.cs.hix)
-getTemplateOutputExt :: FilePath -> Maybe String
-getTemplateOutputExt file =
-  case reverse (wordsWhen (== '.') file) of
-    ("hix" : ext : _) -> Just ext
-    _ -> Nothing
-
-
--- 🔍 Helper: split by a delimiter
-wordsWhen :: (Char -> Bool) -> String -> [String]
-wordsWhen p s = case dropWhile p s of
-  "" -> []
-  s' -> w : wordsWhen p s''
-    where (w, s'') = break p s'
-
--- 🛠 Report suspicious tags
-reportTagProblem :: Token -> IO ()
-reportTagProblem (Tag content line col) =
-  if isValidTag content
-     then pure ()
-     else putStrLn $
-       "[!] Suspicious tag '[[" ++ T.unpack content ++ "]]' at line "
-       ++ show line ++ ", column " ++ show col
-reportTagProblem _ = pure ()
-
--- ✅ Known tags
-isValidTag :: Text -> Bool
-isValidTag tag =
-  tag `elem`
-    [ "model.className"
-    , "prop"
-    , "/prop"
-    , "prop.name"
-    , "prop.type"
-    , "/if"
-    ] || any (`T.isPrefixOf` tag)
-         [ "prop type="
-         , "prop.ignore="
-         , "if "
-         , "upper "
-         , "lower "
-         , "snake_case "
-         ]
-
-removeBlankLines :: T.Text -> T.Text
-removeBlankLines = T.unlines . filter (not . T.all isSpace) . T.lines
+-- Helper function to generate a template
+generateTemplate :: C.Layer -> Model -> C.Template -> IO ()
+generateTemplate layer model tmpl = do
+    -- Load the template
+    templateContent <- TIO.readFile (C.template tmpl)
+    -- Replace {{model.name}} in template content
+    let processedContent = replace "{{model.name}}" (className model) templateContent
+    -- Tokenize and parse the template
+    let tokens = tokenize processedContent
+        ast = parseTokens tokens
+        renderedOutput = renderAST ast model
+        -- Replace {{model.name}} with actual model name in filename
+        outputFilename = T.unpack $ replace "{{model.name}}" (className model) (C.filename tmpl)
+        outputPath = C.path layer </> outputFilename
+    -- Write the output to the file
+    TIO.writeFile outputPath renderedOutput
+    putStrLn $ "Generated " ++ outputPath
 

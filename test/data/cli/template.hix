@@ -1,0 +1,5 @@
+public class [[model.className]] {
+    [[prop]]
+    public [[prop.type]] [[prop.name]] { get; set; }
+    [[/prop]]
+} 

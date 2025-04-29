@@ -1,0 +1,6 @@
+# Ignore generated files
+output/*
+!output/.gitkeep
+
+# Keep the output directory in git
+!.gitkeep

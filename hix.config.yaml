@@ -1,0 +1,30 @@
+# hix.config.yaml
+
+# The type of architecture (purely for documentation purposes)
+architecture: clean
+
+# Output root
+output_root: C:\Users\joel\workplace\hix
+
+# Layers configuration
+layers:
+  - name: Entities
+    path: C:\Users\joel\workplace\hix\Entities
+    description: Contains business entities and value objects
+    templates:
+      - template: C:\Users\joel\workplace\hix\templates\entities\Entity.hix
+        filename: {{model.name}}Entity.cs
+        output_by: model
+
+  - name: UseCases
+    path: C:\Users\joel\workplace\hix\UseCases
+    description: Contains application use cases and business rules
+    templates:
+  - name: InterfaceAdapters
+    path: C:\Users\joel\workplace\hix\InterfaceAdapters
+    description: Contains controllers, gateways, and presenters
+    templates:
+  - name: FrameworksAndDrivers
+    path: C:\Users\joel\workplace\hix\FrameworksAndDrivers
+    description: Contains frameworks, tools, and external interfaces
+    templates:

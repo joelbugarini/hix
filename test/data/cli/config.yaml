@@ -1,0 +1,13 @@
+architecture: clean
+output_root: test/temp/output
+models_path: test/temp/models
+templates_root: test/temp/templates
+
+layers:
+  - name: Domain
+    path: test/temp/output/Domain
+    description: Contains business logic and domain models
+    templates:
+      - template: test/data/cli/template.hix
+        filename: "{{model.name}}.cs"
+        output_by: model 
