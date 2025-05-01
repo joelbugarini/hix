@@ -13,7 +13,7 @@ import qualified Data.ByteString.Char8 as BS
 
 -- Version information
 version :: String
-version = "0.1.0.0"
+version = "0.2.0.0"
 
 -- Help message
 helpMessage :: String

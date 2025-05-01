@@ -1,24 +1,52 @@
+#define MyAppName "Hix"
+#define MyAppVersion "0.2.0"
+#define MyAppPublisher "Hix Team"
+#define MyAppURL "https://github.com/joelbugarini/hix"
+#define MyAppExeName "hix.exe"
+
 [Setup]
-AppName=Hix
-AppVersion=0.1
-DefaultDirName={autopf}\Hix
-DefaultGroupName=Hix
+AppId={{YOUR-APP-ID-HERE}}
+AppName={#MyAppName}
+AppVersion={#MyAppVersion}
+AppPublisher={#MyAppPublisher}
+AppPublisherURL={#MyAppURL}
+AppSupportURL={#MyAppURL}
+AppUpdatesURL={#MyAppURL}
+DefaultDirName={autopf}\{#MyAppName}
+DefaultGroupName={#MyAppName}
+AllowNoIcons=yes
+LicenseFile=..\..\LICENSE
 OutputDir=output
-OutputBaseFilename=hix-setup
+OutputBaseFilename=hix-setup-{#MyAppVersion}
 Compression=lzma
 SolidCompression=yes
-LicenseFile=..\..\LICENSE
+WizardStyle=modern
+VersionInfoVersion={#MyAppVersion}
+VersionInfoCompany={#MyAppPublisher}
+VersionInfoDescription=Hix Code Generator
+VersionInfoCopyright=Copyright (C) 2024
+VersionInfoProductName={#MyAppName}
+VersionInfoProductVersion={#MyAppVersion}
 DisableProgramGroupPage=yes
 
+[Languages]
+Name: "english"; MessagesFile: "compiler:Default.isl"
+
+[Tasks]
+Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
+
 [Files]
-Source: "..\..\dist\hix.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\dist\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\README.md"; DestDir: "{app}"; Flags: ignoreversion
+Source: "..\..\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Hix CLI"; Filename: "{app}\hix.exe"
-Name: "{group}\Uninstall Hix"; Filename: "{uninstallexe}"
+Name: "{group}\{#MyAppName} CLI"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
+Name: "{autodesktop}\{#MyAppName} CLI"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
-Filename: "{app}\hix.exe"; Description: "Run Hix now"; Flags: postinstall skipifsilent
+Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
 
 [Registry]
 Root: HKCU; Subkey: "Environment"; ValueType: string; ValueName: "Path"; \
@@ -38,15 +66,18 @@ end;
 
 function InitializeSetup(): Boolean;
 begin
-  MsgBox('Welcome to the Hix installer wizard!', mbInformation, MB_OK);
+  MsgBox('Welcome to the Hix installer wizard!' + #13#10 +
+         'This will install Hix version {#MyAppVersion} on your computer.',
+         mbInformation, MB_OK);
   Result := True;
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);
 begin
   if CurStep = ssPostInstall then begin
-    MsgBox('✅ Hix CLI was installed successfully!' + #13#10 +
-           'ℹ️ You may need to restart your terminal for "hix" to work everywhere.',
+    MsgBox('✅ Hix CLI version {#MyAppVersion} was installed successfully!' + #13#10 +
+           'ℹ️ You may need to restart your terminal for "hix" to work everywhere.' + #13#10 +
+           '📚 Documentation is available at {#MyAppURL}',
            mbInformation, MB_OK);
   end;
 end;

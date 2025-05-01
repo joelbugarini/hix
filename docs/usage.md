@@ -4,15 +4,30 @@ This guide explains how to use Hix for code generation in your projects.
 
 ## Installation
 
-### Using Stack
+Hix can be installed through various package managers:
+
+### Using Homebrew (macOS/Linux)
 ```bash
-stack install hix
+brew install hix
 ```
 
-### Using Cabal
+### Using Chocolatey (Windows)
 ```bash
-cabal install hix
+choco install hix
 ```
+
+### Using Nix
+```bash
+nix-env -i hix
+```
+
+### Using Docker
+```bash
+docker pull hix/hix
+```
+
+### Manual Installation
+Download the latest release from the [releases page](https://github.com/your-org/hix/releases) and add it to your PATH.
 
 ## Project Setup
 

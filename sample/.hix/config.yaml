@@ -13,6 +13,10 @@ layers:
     path: C:\Users\joel\workplace\hix\sample\.hix\output\Domain
     description: Contains business logic and domain models
     templates:
+      - template: C:\Users\joel\workplace\hix\sample\.hix\templates\domain\Archive.hix
+        filename: {{model.name}}Archive.cs
+        output_by: model
+
   - name: Application
     path: C:\Users\joel\workplace\hix\sample\.hix\output\Application
     description: Contains application services and use cases

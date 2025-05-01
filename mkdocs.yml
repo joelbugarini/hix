@@ -5,11 +5,17 @@ theme:
 
 nav:
   - Home: index.md
+  - Getting Started: getting-started.md
   - Usage: usage.md
   - Template Syntax: templates.md
   - Advanced: advanced.md
   - Real World Usecases: real-world-usecase.md
+  - Development: development.md
+  - Specification: specification.md
+  - Feature Checklist: feature-checklist.md
   - Roadmap: roadmap.md
   - AI Missing Links: missing-link.md
+  - CLI Reference: cli.md
+  - Grammar: grammar.md
 
 docs_dir: docs
