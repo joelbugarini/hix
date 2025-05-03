@@ -1,19 +1,22 @@
-hix - A code generation tool for clean architecture
+hix - A code generation tool
 
-Usage:
-  hix [command] [options]
+Usage: hix [command] [options]
 
 Commands:
   init           Initialize a new hix project
+  generate       Generate files from templates
   help           Show this help message
-  man            Show detailed manual
+  man           Show detailed manual
   version        Show version information
 
 Options:
-  --help         Show this help message
-  --version      Show version information
+  -h, --help     Show this help message
 
 Examples:
   hix init       Initialize a new hix project
+  hix generate --model ./models/user.json
+  hix generate --model ./models/user.json --layer Domain
+  hix generate --model ./models/user.json --template ./templates/domain/Archive.hix
+
   hix help       Show this help message
   hix version    Show version information 

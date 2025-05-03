@@ -41,6 +41,13 @@ This document tracks the status of features based on the [Specification](specifi
 
 ## Current Features Status
 
+### Generate Command
+- [x] Core Functionality Assessment
+- [x] Technical Feasibility
+- [x] Documentation
+- [x] Implementation
+- [x] Review
+
 ### Template Inheritance
 - [x] Core Functionality Assessment
 - [x] Technical Feasibility

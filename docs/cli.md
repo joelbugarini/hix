@@ -57,10 +57,10 @@ hix --version
 ## Code Generation
 
 ### Basic Usage
-To generate code from a model file:
+To generate code from a model file, use the `generate` command:
 
 ```bash
-hix model.json
+hix generate --model model.json
 ```
 
 This will:
@@ -68,6 +68,31 @@ This will:
 2. Read the configuration from `.hix/config.yaml`
 3. Generate code for each layer according to the templates
 4. Output the generated files in their respective layer directories
+
+### Generate Command Options
+
+The `generate` command supports several options:
+
+#### Required Parameters
+- `--model <path>`: Specifies the path to the model file (required)
+
+#### Optional Parameters
+- `--layer <name>`: Generate code only for the specified layer
+- `--template <path>`: Generate code only for the specified template
+
+Examples:
+```bash
+# Generate code for all layers
+hix generate --model model.json
+
+# Generate code only for the Entities layer
+hix generate --model model.json --layer Entities
+
+# Generate code only for a specific template
+hix generate --model model.json --template .hix/templates/template.cs.hix
+```
+
+Note: You cannot specify both `--layer` and `--template` options at the same time.
 
 ### Interactive Mode
 If you run hix without arguments, it will prompt you for the model name:

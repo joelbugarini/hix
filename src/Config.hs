@@ -26,13 +26,13 @@ data Layer = Layer
   , path :: FilePath
   , description :: Text
   , templates :: [Template]
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 data Template = Template
   { template :: FilePath
   , filename :: Text
   , output_by :: Text
-  } deriving (Show, Generic)
+  } deriving (Show, Generic, Eq)
 
 data Naming = Naming
   { model :: Text
