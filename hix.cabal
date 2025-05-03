@@ -20,6 +20,8 @@ library
     , Template.Lexer
     , Template.AST
     , Template.Renderer
+    , Template.RenderNode
+    , Template.RenderProp
     , Grammar.GrammarGen
     , Config.Config
     , CLI.Wizard
