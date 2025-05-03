@@ -1,7 +1,7 @@
 cabal-version:       2.2
 
 name:                hix
-version:             0.3.0.0
+version:             0.3.0.1
 
 homepage:            https://github.com/githubuser/hix#readme
 license:             BSD-3-Clause
@@ -61,22 +61,24 @@ executable hix
 
 test-suite hix-tests
   type:                exitcode-stdio-1.0
-  hs-source-dirs:      test
   main-is:             Specs.hs
-  other-modules:       HelpSpec
-                     , GenerateSpec
+  other-modules:
+      HelpSpec
+    , GenerateSpec
+    , WizardSpec
+  hs-source-dirs:      test
   build-depends:
       base
+    , hix
     , hspec
     , text
-    , hix
-    , filepath
-    , bytestring
     , aeson
-    , silently
-    , process
+    , filepath
     , directory
-    , hspec-golden
-    , MissingH
-    , temporary
+    , yaml
+    , unordered-containers
+    , process
+    , bytestring
+    , silently
   default-language:    Haskell2010
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N

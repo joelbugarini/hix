@@ -77,9 +77,12 @@ createDefaultConfig root = do
   configureTemplates <- getLine
   let layersWithTemplates = if configureTemplates == "y"
         then mapM (configureLayerTemplates hixRoot) defaultLayers
-        else return defaultLayers
+        else return $ map (addDefaultTemplate hixRoot) defaultLayers
   
   layers <- layersWithTemplates
+  
+  -- Create default template files
+  mapM_ (\layer -> createDefaultTemplateFile hixRoot layer) layers
   
   let config = C.Config
         { C.architecture = T.pack $ name selectedArch
@@ -118,6 +121,34 @@ createDefaultConfig root = do
   
   -- Create .gitkeep in output directory
   TIO.writeFile (hixRoot </> "output" </> ".gitkeep") ""
+
+-- Add default template to a layer
+addDefaultTemplate :: FilePath -> C.Layer -> C.Layer
+addDefaultTemplate hixRoot layer = layer { C.templates = [defaultTemplate] }
+  where
+    defaultTemplate = C.Template
+      (hixRoot </> "templates" </> toLower (T.unpack (C.name layer)) </> "Entity.hix")
+      (T.pack "[[model.className]].cs")
+      "model"
+
+-- Create default template file for a layer
+createDefaultTemplateFile :: FilePath -> C.Layer -> IO ()
+createDefaultTemplateFile hixRoot layer = do
+  let templateDir = hixRoot </> "templates" </> toLower (T.unpack (C.name layer))
+  createDirectoryIfMissing True templateDir
+  let templateFile = templateDir </> "Entity.hix"
+      content = T.unlines
+        [ "-- Example template for " <> C.name layer <> " layer"
+        , "-- This is a sample template that will be used to generate code"
+        , "-- You can modify this template to match your needs"
+        , ""
+        , "public class [[model.className]] {"
+        , "    [[prop]]"
+        , "    public [[prop.type]] [[prop.name]] { get; set; }"
+        , "    [[/prop]]"
+        , "}"
+        ]
+  TIO.writeFile templateFile content
 
 -- Get custom layers from user input
 getCustomLayers :: IO [C.Layer]
@@ -164,20 +195,25 @@ configureLayerTemplates hixRoot layer = do
 
 -- Helper function to format a layer for YAML output
 formatLayer :: C.Layer -> T.Text
-formatLayer layer = T.unlines $
-  [ "  - name: " <> C.name layer
-  , "    path: " <> T.pack (C.path layer)
-  , "    description: " <> C.description layer
-  , "    templates:"
-  ] ++ map formatTemplate (C.templates layer)
+formatLayer layer = T.concat
+  [ "  - name: \"", C.name layer, "\"\n"
+  , "    path: \"", T.pack (fixPath $ C.path layer), "\"\n"
+  , "    description: \"", C.description layer, "\"\n"
+  , "    templates:", if null (C.templates layer) then " []\n" else "\n"
+  , T.concat (map formatTemplate (C.templates layer))
+  ]
 
 -- Helper function to format a template for YAML output
 formatTemplate :: C.Template -> T.Text
-formatTemplate tmpl = T.unlines
-  [ "      - template: " <> T.pack (C.template tmpl)
-  , "        filename: " <> C.filename tmpl
-  , "        output_by: " <> C.output_by tmpl
+formatTemplate tmpl = T.concat
+  [ "      - template: \"", T.pack (fixPath $ C.template tmpl), "\"\n"
+  , "        filename: \"", C.filename tmpl, "\"\n"
+  , "        output_by: \"", C.output_by tmpl, "\"\n"
   ]
+
+-- Helper function to convert backslashes to forward slashes
+fixPath :: FilePath -> FilePath
+fixPath = map (\c -> if c == '\\' then '/' else c)
 
 -- Create example template for a layer
 createExampleTemplate :: FilePath -> String -> IO ()
