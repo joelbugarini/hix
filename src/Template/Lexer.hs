@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lexer
+module Template.Lexer
   ( Token(..)
   , tokenize
   ) where

@@ -4,7 +4,7 @@ module HelpSpec (helpSpec) where
 
 import Test.Hspec
 import System.IO.Silently (capture)
-import Help (helpMessage, manualMessage, version)
+import CLI.Help (helpMessage, manualMessage, version)
 import System.Directory (createDirectoryIfMissing)
 import Data.Text (pack, unpack, replace)
 

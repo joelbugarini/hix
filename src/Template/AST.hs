@@ -1,14 +1,14 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
 
-module TemplateAST
+module Template.AST
   ( AST(..)
   , parseTokens
   ) where
 
 import qualified Data.Text as T
 import Data.Text (Text)
-import Lexer (Token(..))
+import Template.Lexer (Token(..))
 
 -- AST data types
 data AST

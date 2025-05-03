@@ -5,12 +5,12 @@ module Main (main) where
 import qualified Data.Text as T
 import System.FilePath ((</>))
 import Data.Maybe (fromMaybe, isJust)
-import qualified Config as C
-import Model (loadModel, Model(..), Property(..))
+import qualified Config.Config as C
+import Model.Model (loadModel, Model(..), Property(..))
 import System.Environment (getArgs)
-import qualified Wizard as W
+import qualified CLI.Wizard as W
 import System.Directory (getCurrentDirectory, createDirectoryIfMissing)
-import Help (helpMessage, manualMessage, version)
+import CLI.Help (helpMessage, manualMessage, version)
 import Data.List (find)
 import System.Exit (exitFailure)
 import Control.Monad (when)

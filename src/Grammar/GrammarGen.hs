@@ -2,7 +2,7 @@
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE DeriveAnyClass #-}
 
-module GrammarGen (writeGrammarFile) where
+module Grammar.GrammarGen (writeGrammarFile) where
 
 import Data.Aeson (ToJSON, encode, ToJSON(..), object, (.=))
 import GHC.Generics (Generic)

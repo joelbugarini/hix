@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Model
+module Model.Model
   ( Model(..)
   , Property(..)
   , PropertyType(..)

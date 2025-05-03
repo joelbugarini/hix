@@ -16,14 +16,14 @@ extra-source-files:  README.md
 
 library
   exposed-modules:
-      Model
-    , Lexer
-    , TemplateAST
-    , Renderer
-    , GrammarGen
-    , Config
-    , Wizard
-    , Help
+      Model.Model
+    , Template.Lexer
+    , Template.AST
+    , Template.Renderer
+    , Grammar.GrammarGen
+    , Config.Config
+    , CLI.Wizard
+    , CLI.Help
   hs-source-dirs:      src
   build-depends:
       base >= 4.7 && < 5

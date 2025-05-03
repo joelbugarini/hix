@@ -2,7 +2,7 @@
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Config where
+module Config.Config where
 
 import Data.Yaml (FromJSON(..), decodeFileEither, withObject, (.:), (.:?))
 import GHC.Generics (Generic)

@@ -1,7 +1,7 @@
 module ModelSpec where
 
 import Test.Hspec
-import Model
+import Model.Model
 import Data.Aeson
 import qualified Data.ByteString.Lazy as B
 
