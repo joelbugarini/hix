@@ -17,5 +17,6 @@ nav:
   - AI Missing Links: missing-link.md
   - CLI Reference: cli.md
   - Grammar: grammar.md
+  - Bug Report Template: bug-report-template.md
 
 docs_dir: docs

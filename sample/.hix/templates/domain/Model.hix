@@ -1,9 +1,0 @@
--- Example template for Domain layer
--- This is a sample template that will be used to generate code
--- You can modify this template to match your needs
-
-public class [[model.className]] {
-    [[prop]]
-    public [[prop.type]] [[prop.name]] { get; set; }
-    [[/prop]]
-}
