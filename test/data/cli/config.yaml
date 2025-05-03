@@ -9,5 +9,5 @@ layers:
     description: Contains business logic and domain models
     templates:
       - template: test/data/cli/template.hix
-        filename: "{{model.name}}.cs"
+        filename: "[[model.className]].cs"
         output_by: model 

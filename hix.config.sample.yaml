@@ -15,7 +15,7 @@ layers:
       - template_name: Entity
         template: ./templates/entity.hix
         output_by: model
-        filename: "{{model.name}}.cs"
+        filename: "[[model.name]].cs"
   
   - name: Presentation
     path: ./sample/Presentation
@@ -24,11 +24,11 @@ layers:
       - template_name: Controller
         template: ./templates/controller.hix
         output_by: model
-        filename: "{{model.name}}Controller.cs"
+        filename: "[[model.name]]Controller.cs"
       - template_name: View
         template: ./templates/view.hix
         output_by: model
-        filename: "{{model.name}}View.cs"
+        filename: "[[model.name]]View.cs"
   
   - name: Infrastructure
     path: ./sample/Infrastructure

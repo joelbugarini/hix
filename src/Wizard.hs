@@ -149,7 +149,7 @@ configureLayerTemplates hixRoot layer = do
   templates <- getTemplates
   let templateFiles = map (\name -> C.Template 
         (hixRoot </> "templates" </> toLower (T.unpack (C.name layer)) </> name <.> "hix")
-        (T.pack $ "{{model.name}}" ++ name <.> "cs")
+        (T.pack $ "[[model.className]]" ++ name <.> "cs")
         "model") templates
   return layer { C.templates = templateFiles }
   where

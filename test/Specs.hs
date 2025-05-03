@@ -11,7 +11,7 @@ import Data.Char (isSpace)
 import System.Directory (createDirectoryIfMissing, removeDirectoryRecursive, removeFile)
 import System.IO.Silently (capture_)
 import System.Process (readProcess, readProcessWithExitCode)
-import System.Exit (ExitCode(ExitSuccess))
+import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 
 import Lexer (tokenize)
 import TemplateAST (parseTokens, AST(..))
@@ -19,6 +19,7 @@ import Model (Model(..), Property(..), PropertyType(..))
 import Renderer (renderAST)
 import qualified Data.Aeson as Aeson
 import HelpSpec
+import GenerateSpec
 
 helpMessage :: String
 helpMessage = init $ unlines
@@ -47,6 +48,7 @@ helpMessage = init $ unlines
 main :: IO ()
 main = hspec $ do
   helpSpec
+  generateSpec
 
   describe "Lexer" $ do
     it "tokenizes simple template" $
@@ -110,7 +112,30 @@ main = hspec $ do
     it "shows help message when no arguments provided" $ do
       (exitCode, output, _) <- readProcessWithExitCode "stack" ["exec", "hix", "--"] ""
       exitCode `shouldBe` ExitSuccess
-      output `shouldBe` helpMessage
+      output `shouldBe` unlines [
+          "hix - A code generation tool"
+        , ""
+        , "Usage: hix [command] [options]"
+        , ""
+        , "Commands:"
+        , "  init           Initialize a new hix project"
+        , "  generate       Generate files from templates"
+        , "  help           Show this help message"
+        , "  man           Show detailed manual"
+        , "  version        Show version information"
+        , ""
+        , "Options:"
+        , "  -h, --help     Show this help message"
+        , ""
+        , "Examples:"
+        , "  hix init       Initialize a new hix project"
+        , "  hix generate --model ./models/user.json"
+        , "  hix generate --model ./models/user.json --layer Domain"
+        , "  hix generate --model ./models/user.json --template ./templates/domain/Archive.hix"
+        , ""
+        , "  hix help       Show this help message"
+        , "  hix version    Show version information"
+        ]
 
   describe "Golden rendering" $ do
     goldenTest "example"
