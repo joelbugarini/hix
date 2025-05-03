@@ -66,61 +66,59 @@ handleGenerateCommand cmdArgs = do
   let modelArg = findArg "--model" cmdArgs
       layerArg = findArg "--layer" cmdArgs
       templateArg = findArg "--template" cmdArgs
-  -- Fix: Immediately fail if both --layer and --template are specified
-  if isJust layerArg && isJust templateArg then do
-    putStrLn "Error: Cannot specify both --layer and --template"
-    exitFailure
-  else case (modelArg, templateArg) of
-    (Just modelPath, Just templatePath) -> do
-      -- Minimal mode: just model and template, no config required
-      modelResult <- loadModel modelPath
-      case modelResult of
-        Left err -> do
-          putStrLn $ "Error loading model: " ++ err
-          exitFailure
-        Right modelData -> do
-          fileExists <- doesFileExist templatePath
-          if not fileExists
-            then do
-              putStrLn $ "Error: Template '" ++ templatePath ++ "' not found"
-              exitFailure
-            else do
-              templateContent <- readFile templatePath
-              let tokens = tokenize (T.pack templateContent)
-                  ast = parseTokens tokens
-                  code = renderAST ast modelData
-              TIO.putStrLn code
-    _ -> do
-      -- Existing logic for config-based generation
-      let modelArg = findArg "--model" cmdArgs
-          layerArg = findArg "--layer" cmdArgs
-          templateArg = findArg "--template" cmdArgs
-      case modelArg of
-        Nothing -> do
-          putStrLn "Error: --model parameter is required"
-          exitFailure
-        Just modelPath -> do
-          -- Load model
-          modelResult <- loadModel modelPath
-          case modelResult of
-            Left err -> do
-              putStrLn $ "Error loading model: " ++ err
-              exitFailure
-            Right modelData -> do
-              -- Load config
-              configResult <- C.loadConfig ".hix/config.yaml"
-              case configResult of
-                Left err -> do
-                  putStrLn $ "Error loading config: " ++ err
-                  exitFailure
-                Right config -> do
-                  case (layerArg, templateArg) of
-                    (Just layer, Nothing) -> generateForLayer config modelData layer
-                    (Nothing, Just tmpl) -> generateForTemplate config modelData tmpl
-                    (Nothing, Nothing) -> generateForAllLayers config modelData
-                    _ -> do
-                      putStrLn "Error: Cannot specify both --layer and --template"
-                      exitFailure
+  configExists <- doesFileExist ".hix/config.yaml"
+  -- Minimal mode ONLY if both --model and --template are present AND config does not exist
+  if isJust modelArg && isJust templateArg && not configExists then do
+    let Just modelPath = modelArg
+        Just templatePath = templateArg
+    modelResult <- loadModel modelPath
+    case modelResult of
+      Left err -> do
+        putStrLn $ "Error loading model: " ++ err
+        exitFailure
+      Right modelData -> do
+        fileExists <- doesFileExist templatePath
+        if not fileExists
+          then do
+            putStrLn $ "Error: Template '" ++ templatePath ++ "' not found"
+            exitFailure
+          else do
+            templateContent <- readFile templatePath
+            let tokens = tokenize (T.pack templateContent)
+                ast = parseTokens tokens
+                code = renderAST ast modelData
+            TIO.putStrLn code
+  else do
+    let modelArg = findArg "--model" cmdArgs
+        layerArg = findArg "--layer" cmdArgs
+        templateArg = findArg "--template" cmdArgs
+    if isJust layerArg && isJust templateArg then do
+      putStrLn "Error: Cannot specify both --layer and --template"
+      exitFailure
+    else case modelArg of
+      Nothing -> do
+        putStrLn "Error: --model parameter is required"
+        exitFailure
+      Just modelPath -> do
+        modelResult <- loadModel modelPath
+        case modelResult of
+          Left err -> do
+            putStrLn $ "Error loading model: " ++ err
+            exitFailure
+          Right modelData -> do
+            configResult <- C.loadConfig ".hix/config.yaml"
+            case configResult of
+              Left err -> do
+                putStrLn $ "Error loading config: " ++ err
+                exitFailure
+              Right config -> do
+                case (layerArg, templateArg) of
+                  (Just layer, Nothing) -> generateForLayer config modelData layer
+                  (Nothing, Just tmpl) -> generateForTemplate config modelData tmpl
+                  (Nothing, Nothing) -> generateForAllLayers config modelData
+                  _ -> do
+                    putStrLn "Error: Cannot specify both --layer and --template"
+                    exitFailure
 
   where
     findArg :: String -> [String] -> Maybe String
@@ -195,7 +193,6 @@ generateTemplateWithUserPath layer modelData template userTemplatePath = do
       exitFailure
     else do
       let outputPath = C.path layer </> T.unpack (T.replace "[[model.className]]" (className modelData) $ C.filename template)
-      putStrLn $ "Generating file: " ++ outputPath
       createDirectoryIfMissing True (C.path layer)
       templateContent <- readFile templatePath
       let tokens = tokenize (T.pack templateContent)
