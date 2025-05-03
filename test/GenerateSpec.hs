@@ -5,8 +5,8 @@
 module GenerateSpec (generateSpec) where
 
 import Test.Hspec
-import System.Process (readCreateProcessWithExitCode, proc)
-import System.Directory (createDirectoryIfMissing, removeDirectoryRecursive, getCurrentDirectory, setCurrentDirectory, removeFile, doesFileExist)
+import System.Process (readCreateProcessWithExitCode, proc, readProcessWithExitCode)
+import System.Directory (createDirectoryIfMissing, removeDirectoryRecursive, getCurrentDirectory, setCurrentDirectory, removeFile, doesFileExist, withCurrentDirectory)
 import System.FilePath ((</>))
 import Control.Exception (bracket, catch, try, IOException)
 import Data.List (isInfixOf)
@@ -357,3 +357,12 @@ generateSpec = describe "Generate Command" $ do
       
       hasClassStart `shouldBe` True
       hasClassEnd `shouldBe` True
+
+  describe "Minimal CLI" $ do
+    it "renders output with only --template and --model, no config" $ do
+      let dir = "test/data/example"
+      withCurrentDirectory dir $ do
+        (exitCode, output, _) <- readProcessWithExitCode "stack" ["exec", "hix", "--", "generate", "--template", "template.hix", "--model", "model.json"] ""
+        expected <- TIO.readFile ("expected.txt")
+        exitCode `shouldBe` ExitSuccess
+        T.strip (T.pack output) `shouldBe` T.strip expected

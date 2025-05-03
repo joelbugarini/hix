@@ -9,11 +9,15 @@ import qualified Config.Config as C
 import Model.Model (loadModel, Model(..), Property(..))
 import System.Environment (getArgs)
 import qualified CLI.Wizard as W
-import System.Directory (getCurrentDirectory, createDirectoryIfMissing)
+import System.Directory (getCurrentDirectory, createDirectoryIfMissing, doesFileExist)
 import CLI.Help (helpMessage, manualMessage, version)
 import Data.List (find)
 import System.Exit (exitFailure)
 import Control.Monad (when)
+import Template.Lexer (tokenize)
+import Template.AST (parseTokens)
+import Template.Renderer (renderAST)
+import qualified Data.Text.IO as TIO
 
 main :: IO ()
 main = do
@@ -59,42 +63,64 @@ main = do
 -- Handle the generate command with its arguments
 handleGenerateCommand :: [String] -> IO ()
 handleGenerateCommand cmdArgs = do
-  -- Parse arguments
   let modelArg = findArg "--model" cmdArgs
       layerArg = findArg "--layer" cmdArgs
       templateArg = findArg "--template" cmdArgs
-  
-  -- Check for required model argument
-  case modelArg of
-    Nothing -> do
-      putStrLn "Error: --model parameter is required"
-      exitFailure
-    Just modelPath -> do
-      -- Check for mutually exclusive arguments
-      when (isJust layerArg && isJust templateArg) $ do
-        putStrLn "Error: Cannot specify both --layer and --template"
-        exitFailure
-      
-      -- Load model
+  -- Fix: Immediately fail if both --layer and --template are specified
+  if isJust layerArg && isJust templateArg then do
+    putStrLn "Error: Cannot specify both --layer and --template"
+    exitFailure
+  else case (modelArg, templateArg) of
+    (Just modelPath, Just templatePath) -> do
+      -- Minimal mode: just model and template, no config required
       modelResult <- loadModel modelPath
       case modelResult of
         Left err -> do
           putStrLn $ "Error loading model: " ++ err
           exitFailure
         Right modelData -> do
-          -- Load config
-          configResult <- C.loadConfig ".hix/config.yaml"
-          case configResult of
-            Left err -> do
-              putStrLn $ "Error loading config: " ++ err
+          fileExists <- doesFileExist templatePath
+          if not fileExists
+            then do
+              putStrLn $ "Error: Template '" ++ templatePath ++ "' not found"
               exitFailure
-            Right config -> do
-              -- Generate based on arguments
-              case (layerArg, templateArg) of
-                (Just layer, Nothing) -> generateForLayer config modelData layer
-                (Nothing, Just tmpl) -> generateForTemplate config modelData tmpl
-                (Nothing, Nothing) -> generateForAllLayers config modelData
-                _ -> error "Unreachable case: layer and template both specified"
+            else do
+              templateContent <- readFile templatePath
+              let tokens = tokenize (T.pack templateContent)
+                  ast = parseTokens tokens
+                  code = renderAST ast modelData
+              TIO.putStrLn code
+    _ -> do
+      -- Existing logic for config-based generation
+      let modelArg = findArg "--model" cmdArgs
+          layerArg = findArg "--layer" cmdArgs
+          templateArg = findArg "--template" cmdArgs
+      case modelArg of
+        Nothing -> do
+          putStrLn "Error: --model parameter is required"
+          exitFailure
+        Just modelPath -> do
+          -- Load model
+          modelResult <- loadModel modelPath
+          case modelResult of
+            Left err -> do
+              putStrLn $ "Error loading model: " ++ err
+              exitFailure
+            Right modelData -> do
+              -- Load config
+              configResult <- C.loadConfig ".hix/config.yaml"
+              case configResult of
+                Left err -> do
+                  putStrLn $ "Error loading config: " ++ err
+                  exitFailure
+                Right config -> do
+                  case (layerArg, templateArg) of
+                    (Just layer, Nothing) -> generateForLayer config modelData layer
+                    (Nothing, Just tmpl) -> generateForTemplate config modelData tmpl
+                    (Nothing, Nothing) -> generateForAllLayers config modelData
+                    _ -> do
+                      putStrLn "Error: Cannot specify both --layer and --template"
+                      exitFailure
 
   where
     findArg :: String -> [String] -> Maybe String
@@ -127,70 +153,59 @@ generateForLayer config modelData layerName = do
 
 -- Generate code for a specific template
 generateForTemplate :: C.Config -> Model -> String -> IO ()
-generateForTemplate config modelData templatePath = do
-  putStrLn $ "Looking for template: " ++ templatePath
-  putStrLn "Available templates:"
-  mapM_ (\layer -> do
-    putStrLn $ "  Layer: " ++ T.unpack (C.name layer)
-    mapM_ (\tmpl -> do
-      putStrLn $ "    Template path: " ++ C.template tmpl
-      putStrLn $ "    Normalized template path: " ++ normalizeFilePath (C.template tmpl)
-      ) (C.templates layer)
-    ) (C.layers config)
-  putStrLn $ "Normalized search path: " ++ normalizeFilePath templatePath
-  let matchingTemplates = concatMap (\layer -> 
-        filter (\tmpl -> normalizeFilePath (C.template tmpl) == normalizeFilePath templatePath) (C.templates layer)) 
+generateForTemplate config modelData userTemplatePath = do
+  let normInput = normalizeFilePath (trim userTemplatePath)
+      matchingTemplates = concatMap (\layer -> 
+        filter (\tmpl -> normalizeFilePath (trim (C.template tmpl)) == normInput) (C.templates layer)) 
         (C.layers config)
   case matchingTemplates of
     [] -> do
-      putStrLn $ "Error: Template '" ++ templatePath ++ "' not found"
+      putStrLn $ "Error: Template '" ++ userTemplatePath ++ "' not found"
+      exitFailure
+    (tmpl:_) -> do
+      putStrLn $ "Looking for template: " ++ userTemplatePath
       putStrLn "Available templates:"
       mapM_ (\layer -> do
         putStrLn $ "  Layer: " ++ T.unpack (C.name layer)
-        mapM_ (\tmpl -> putStrLn $ "    - " ++ C.template tmpl) (C.templates layer)
+        mapM_ (\tmpl' -> do
+          putStrLn $ "    Template path: " ++ C.template tmpl'
+          putStrLn $ "    Normalized template path: " ++ normalizeFilePath (C.template tmpl')
+          ) (C.templates layer)
         ) (C.layers config)
-      exitFailure
-    (tmpl:_) -> do
+      putStrLn $ "Normalized search path: " ++ normInput
       case find (\l -> tmpl `elem` C.templates l) (C.layers config) of
         Nothing -> error "Internal error: template found but layer not found"
         Just layer -> do
-          putStrLn $ "Generating code for template: " ++ templatePath
-          generateTemplate layer modelData tmpl
+          putStrLn $ "Generating code for template: " ++ userTemplatePath
+          generateTemplateWithUserPath layer modelData tmpl userTemplatePath
   where
     normalizeFilePath :: FilePath -> FilePath
     normalizeFilePath = map (\c -> if c == '\\' then '/' else c)
+    trim = f . f
+      where f = reverse . dropWhile (== ' ')
+
+-- Helper function to generate a template, with user-supplied path for error reporting
+generateTemplateWithUserPath :: C.Layer -> Model -> C.Template -> String -> IO ()
+generateTemplateWithUserPath layer modelData template userTemplatePath = do
+  let templatePath = C.template template
+  fileExists <- doesFileExist templatePath
+  if not fileExists
+    then do
+      putStrLn $ "Error: Template '" ++ userTemplatePath ++ "' not found"
+      exitFailure
+    else do
+      let outputPath = C.path layer </> T.unpack (T.replace "[[model.className]]" (className modelData) $ C.filename template)
+      putStrLn $ "Generating file: " ++ outputPath
+      createDirectoryIfMissing True (C.path layer)
+      templateContent <- readFile templatePath
+      let tokens = tokenize (T.pack templateContent)
+          ast = parseTokens tokens
+          code = renderAST ast modelData
+      TIO.writeFile outputPath code
 
 -- Function to generate code for a layer
 generateCodeForLayer :: C.Layer -> Model -> IO ()
 generateCodeForLayer layer modelData = do
   putStrLn $ "Generating code for layer: " ++ T.unpack (C.name layer)
-  mapM_ (generateTemplate layer modelData) (C.templates layer)
-
--- Helper function to generate a template
-generateTemplate :: C.Layer -> Model -> C.Template -> IO ()
-generateTemplate layer modelData template = do
-  let outputPath = C.path layer </> T.unpack (T.replace "[[model.className]]" (className modelData) $ C.filename template)
-  putStrLn $ "Generating file: " ++ outputPath
-  
-  -- Create output directory if it doesn't exist
-  createDirectoryIfMissing True (C.path layer)
-  
-  -- Read template file
-  templateContent <- readFile (C.template template)
-  
-  -- Generate code
-  let code = renderTemplate templateContent modelData
-  writeFile outputPath code
-  where
-    renderTemplate :: String -> Model -> String
-    renderTemplate content m = T.unpack $ T.replace "[[model.className]]" (className m) $
-                             T.replace "[[prop]]" propLoop $
-                             T.replace "[[/prop]]" "" $
-                             T.pack content
-    
-    propLoop :: T.Text
-    propLoop = T.unlines $ map (\prop -> 
-      T.replace "[[prop.type]]" (T.pack $ show $ propType prop) $
-      T.replace "[[prop.name]]" (propName prop) $
-      "  public [[prop.type]] [[prop.name]] { get; set; }") (properties modelData)
+  mapM_ (\tmpl -> generateTemplateWithUserPath layer modelData tmpl (C.template tmpl)) (C.templates layer)
 
