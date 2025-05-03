@@ -1,8 +1,0 @@
-{
-  "className": "Person",
-  "properties": [
-    { "name": "Id", "type": "int" },
-    { "name": "TitleName", "type": "datetime" },
-    { "name": "IsActive", "type": "bool" }
-  ]
-}
