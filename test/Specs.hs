@@ -20,6 +20,7 @@ import Renderer (renderAST)
 import qualified Data.Aeson as Aeson
 import HelpSpec
 import GenerateSpec
+import WizardSpec
 
 helpMessage :: String
 helpMessage = init $ unlines
@@ -49,6 +50,7 @@ main :: IO ()
 main = hspec $ do
   helpSpec
   generateSpec
+  wizardSpec
 
   describe "Lexer" $ do
     it "tokenizes simple template" $
