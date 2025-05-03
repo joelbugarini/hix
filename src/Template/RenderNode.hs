@@ -4,13 +4,14 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
-import Template.RenderProp (renderPropBlock, propertyTypeToText)
+import Template.RenderProp (renderPropBlock, propertyTypeToText, applyFunc)
 
 renderNode :: Model -> AST -> Text
 renderNode _ (Literal t) = t
 renderNode model (ModelValue t) | t == T.pack "model.className" = className model
 renderNode model (FuncCall fn arg)
-  | T.pack "model." `T.isPrefixOf` arg = T.pack ("--[[Unsupported func arg: " ++ T.unpack arg ++ "]]" )
+  | arg == T.pack "model.className" = applyFunc fn (className model)
+  | T.pack "model." `T.isPrefixOf` arg = T.pack ("--[[Unknown func arg: " ++ T.unpack arg ++ "]]" )
   | otherwise = T.pack ("--[[Unsupported func arg: " ++ T.unpack arg ++ "]]" )
 renderNode _ (ModelValue key) = T.pack ("--[[Unknown model key: " ++ T.unpack key ++ "]]" )
 renderNode _ (UnknownTag t) = T.pack ("--[[Unknown tag: " ++ T.unpack t ++ "]]" )
