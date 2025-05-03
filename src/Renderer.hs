@@ -32,11 +32,13 @@ renderNode model (PropLoop mFilter body) =
         Just ("type", t)   -> filter (\p -> T.strip (propertyTypeToText (propType p)) == T.strip t) (properties model)
         Just ("ignore", n) -> filter (\p -> T.strip (propName p) /= T.strip n) (properties model)
         _ -> properties model
-  in T.concat $ map (\p -> renderPropBlock p body) propsToRender
+  in if null propsToRender 
+     then "" -- If no properties match the filter, don't render anything
+     else T.concat $ map (\p -> renderPropBlock p body) propsToRender
 
 -- Render all AST nodes in a [[prop]] block for a given property
 renderPropBlock :: Property -> [AST] -> Text
-renderPropBlock prop = T.concat . map (renderPropNode prop)
+renderPropBlock prop asts = T.concat $ map (renderPropNode prop) asts
 
 -- Render inner nodes inside a [[prop]] loop
 renderPropNode :: Property -> AST -> Text
@@ -46,9 +48,10 @@ renderPropNode prop (ModelValue "prop.type") = propertyTypeToText (propType prop
 renderPropNode prop (FuncCall fn arg)
   | arg == "prop.name" = applyFunc fn (propName prop)
   | arg == "prop.type" = applyFunc fn (propertyTypeToText (propType prop))
-  | otherwise = "--[[Unsupported func arg: " <> arg <> "]]"
-renderPropNode _ (ModelValue key) = "--[[Unknown prop key: " <> key <> "]]"
-renderPropNode _ (UnknownTag t) = "--[[Unknown tag: " <> t <> "]]"
+  | otherwise = ""  -- Skip unsupported function calls
+renderPropNode _ (ModelValue key) = ""  -- Skip unknown model values
+renderPropNode _ (UnknownTag _) = ""  -- Skip unknown tags
+renderPropNode _ (PropLoop _ _) = ""  -- Skip nested prop loops
 renderPropNode prop (IfBlock (k, v) trueBody mElse) =
   let val = case k of
               "prop.name" -> propName prop

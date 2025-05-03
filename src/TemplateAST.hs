@@ -41,7 +41,11 @@ parseTokens = go
                                _ -> Nothing
               (body, after) = collectUntil "/prop" rest
               inner = parseTokens body
-          in PropLoop mFilter inner : go after
+              -- Skip the /prop tag in the remaining tokens
+              remainingTokens = case after of
+                (Tag t _ _ : rest') | T.strip t == "/prop" -> rest'
+                _ -> after
+          in PropLoop mFilter inner : go remainingTokens
 
       -- ✅ Handle [[if key=value]] ... [[/if]]
       | "if " `T.isPrefixOf` content =
@@ -66,12 +70,12 @@ parseTokens = go
       | otherwise =
           let clean = T.strip content
           in case clean of
-              "/prop"           -> go rest
-              "/if"             -> go rest
+              "/prop"           -> go rest  -- Skip /prop tags
+              "/if"             -> go rest  -- Skip /if tags
               "model.className" -> ModelValue clean : go rest
               "prop.name"       -> ModelValue clean : go rest
               "prop.type"       -> ModelValue clean : go rest
-              _                 -> UnknownTag clean : go rest
+              _                 -> go rest  -- Skip unknown tags
 
     -- 📦 Collect tokens inside a loop until [[/tag]]
     collectUntil :: Text -> [Token] -> ([Token], [Token])

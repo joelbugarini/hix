@@ -1,7 +1,7 @@
 cabal-version:       2.2
 
 name:                hix
-version:             0.3.0.1
+version:             0.3.0.2
 
 homepage:            https://github.com/githubuser/hix#readme
 license:             BSD-3-Clause
@@ -71,6 +71,7 @@ test-suite hix-tests
       base
     , hix
     , hspec
+    , hspec-core
     , text
     , aeson
     , filepath
