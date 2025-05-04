@@ -56,6 +56,22 @@ Where:
    docs(git): add git conventions documentation
    ```
 
+## Pull Request Title Guidelines
+
+Pull request titles should follow this format:
+```
+<Type>/<Version>: <short description>
+```
+Where:
+- `<Type>` is one of: Feature, Bugfix, Refactor, Docs, Chore, etc.
+- `<Version>` is the version number the PR targets (e.g., 0.3.0.1)
+- `<short description>` is a concise summary of the change
+
+### Example
+```
+Bugfix/0.3.0.1: resolve YAML parsing issues in configuration generation
+```
+
 ## Workflow
 
 1. Create a new branch following the naming convention
