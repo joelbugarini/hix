@@ -111,8 +111,6 @@ wizardSpec = describe "Wizard Configuration" $ do
         
         configPath <- getCurrentDirectory >>= \dir -> return (dir </> ".hix" </> "config.yaml")
         configContent <- TIO.readFile configPath
-        putStrLn $ "Generated YAML content:"
-        putStrLn $ T.unpack configContent
         
         case Y.decodeEither' (TE.encodeUtf8 configContent) :: Either Y.ParseException (HashMap T.Text Value) of
           Left err -> expectationFailure $ "Failed to parse YAML: " ++ show err
@@ -120,8 +118,6 @@ wizardSpec = describe "Wizard Configuration" $ do
             let hasArchitecture = "architecture" `elem` keys config
             let hasLayers = "layers" `elem` keys config
             let hasOutputRoot = "output_root" `elem` keys config
-            
-            putStrLn $ "Keys found in config: " ++ show (keys config)
             
             hasArchitecture `shouldBe` True
             hasLayers `shouldBe` True

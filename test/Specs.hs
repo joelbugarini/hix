@@ -1,5 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE OverloadedStrings #-}
 
 import Test.Hspec
 import qualified Data.Text as T
@@ -13,10 +13,10 @@ import System.IO.Silently (capture_)
 import System.Process (readProcess, readProcessWithExitCode)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 
-import Lexer (tokenize)
-import TemplateAST (parseTokens, AST(..))
-import Model (Model(..), Property(..), PropertyType(..))
-import Renderer (renderAST)
+import Template.Lexer (tokenize)
+import Template.AST (parseTokens, AST(..))
+import Model.Model (Model(..), Property(..), PropertyType(..))
+import Template.Renderer (renderAST)
 import qualified Data.Aeson as Aeson
 import HelpSpec
 import GenerateSpec

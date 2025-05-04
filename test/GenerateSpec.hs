@@ -5,8 +5,8 @@
 module GenerateSpec (generateSpec) where
 
 import Test.Hspec
-import System.Process (readCreateProcessWithExitCode, proc)
-import System.Directory (createDirectoryIfMissing, removeDirectoryRecursive, getCurrentDirectory, setCurrentDirectory, removeFile)
+import System.Process (readCreateProcessWithExitCode, proc, readProcessWithExitCode)
+import System.Directory (createDirectoryIfMissing, removeDirectoryRecursive, getCurrentDirectory, setCurrentDirectory, removeFile, doesFileExist, withCurrentDirectory)
 import System.FilePath ((</>))
 import Control.Exception (bracket, catch, try, IOException)
 import Data.List (isInfixOf)
@@ -235,3 +235,134 @@ generateSpec = describe "Generate Command" $ do
       let outputFile = dir </> ".hix" </> "output" </> "Entities" </> "User.cs"
       result <- verifyFileContent outputFile (T.isInfixOf "User")
       result `shouldBe` True
+
+    it "correctly transforms template tokens during property iteration" $ withTestDir testDir $ \dir -> do
+      -- Create a test model with multiple properties
+      writeFile (dir </> ".hix" </> "models" </> "model.json") $ unlines
+        [ "{"
+        , "  \"className\": \"TestEntity\","
+        , "  \"properties\": ["
+        , "    { \"name\": \"Id\", \"type\": \"int\" },"
+        , "    { \"name\": \"Name\", \"type\": \"string\" },"
+        , "    { \"name\": \"IsActive\", \"type\": \"bool\" }"
+        , "  ]"
+        , "}"
+        ]
+      
+      -- Create a template with property loop
+      writeFile (dir </> ".hix" </> "templates" </> "template.cs.hix") $ unlines
+        [ "public class [[model.className]]"
+        , "{"
+        , "  [[prop]]"
+        , "  public [[prop.type]] [[prop.name]] { get; set; }"
+        , "  [[/prop]]"
+        , "}"
+        ]
+      
+      originalDir <- getCurrentDirectory
+      setCurrentDirectory dir
+      (exitCode, _, _) <- readCreateProcessWithExitCode (proc "stack" ["exec", "--", "hix", "generate", "--model", ".hix/models/model.json", "--template", ".hix/templates/template.cs.hix"]) ""
+      setCurrentDirectory originalDir
+      exitCode `shouldBe` ExitSuccess
+      
+      let outputFile = dir </> ".hix" </> "output" </> "Entities" </> "TestEntity.cs"
+      
+      -- Verify the generated file exists
+      fileExists <- doesFileExist outputFile
+      fileExists `shouldBe` True
+      
+      -- Read the generated file content
+      content <- readFileStrict outputFile
+      
+      -- Verify that all template tokens have been properly transformed
+      let hasUntransformedTokens = T.isInfixOf "[[" content
+      hasUntransformedTokens `shouldBe` False
+      
+      -- Verify the expected properties are present and correctly transformed
+      let hasId = T.isInfixOf "public int Id" content
+      let hasName = T.isInfixOf "public string Name" content
+      let hasIsActive = T.isInfixOf "public bool IsActive" content
+      
+      hasId `shouldBe` True
+      hasName `shouldBe` True
+      hasIsActive `shouldBe` True
+      
+      -- Verify the class structure is correct
+      let hasClassStart = T.isInfixOf "public class TestEntity" content
+      let hasClassEnd = T.isInfixOf "}" content
+      
+      hasClassStart `shouldBe` True
+      hasClassEnd `shouldBe` True
+      
+      -- Verify the property loop was properly processed
+      let propertyCount = length $ filter (\line -> 
+            "public" `T.isPrefixOf` T.strip line && 
+            any (\t -> t `T.isInfixOf` line) ["int", "string", "bool"]) (T.lines content)
+      propertyCount `shouldBe` 3  -- Should have exactly 3 properties
+
+    it "properly cleans up template elements after property substitution" $ withTestDir testDir $ \dir -> do
+      -- Create a test model with multiple properties
+      writeFile (dir </> ".hix" </> "models" </> "model.json") $ unlines
+        [ "{"
+        , "  \"className\": \"TestEntity\","
+        , "  \"properties\": ["
+        , "    { \"name\": \"Id\", \"type\": \"int\" },"
+        , "    { \"name\": \"Name\", \"type\": \"string\" },"
+        , "    { \"name\": \"IsActive\", \"type\": \"bool\" }"
+        , "  ]"
+        , "}"
+        ]
+      
+      -- Create a template with property loop
+      writeFile (dir </> ".hix" </> "templates" </> "template.cs.hix") $ unlines
+        [ "public class [[model.className]]"
+        , "{"
+        , "  [[prop]]"
+        , "  public [[prop.type]] [[prop.name]] { get; set; }"
+        , "  [[/prop]]"
+        , "}"
+        ]
+      
+      originalDir <- getCurrentDirectory
+      setCurrentDirectory dir
+      (exitCode, _, _) <- readCreateProcessWithExitCode (proc "stack" ["exec", "--", "hix", "generate", "--model", ".hix/models/model.json", "--template", ".hix/templates/template.cs.hix"]) ""
+      setCurrentDirectory originalDir
+      exitCode `shouldBe` ExitSuccess
+      
+      let outputFile = dir </> ".hix" </> "output" </> "Entities" </> "TestEntity.cs"
+      
+      -- Verify the generated file exists
+      fileExists <- doesFileExist outputFile
+      fileExists `shouldBe` True
+      
+      -- Read the generated file content
+      content <- readFileStrict outputFile
+      
+      -- Verify that all template tokens have been properly transformed
+      let hasUntransformedTokens = T.isInfixOf "[[" content
+      hasUntransformedTokens `shouldBe` False
+      
+      -- Verify the expected properties are present
+      let hasId = T.isInfixOf "public int Id" content
+      let hasName = T.isInfixOf "public string Name" content
+      let hasIsActive = T.isInfixOf "public bool IsActive" content
+      
+      hasId `shouldBe` True
+      hasName `shouldBe` True
+      hasIsActive `shouldBe` True
+      
+      -- Verify the class structure is correct
+      let hasClassStart = T.isInfixOf "public class TestEntity" content
+      let hasClassEnd = T.isInfixOf "}" content
+      
+      hasClassStart `shouldBe` True
+      hasClassEnd `shouldBe` True
+
+  describe "Minimal CLI" $ do
+    it "renders output with only --template and --model, no config" $ do
+      let dir = "test/data/example"
+      withCurrentDirectory dir $ do
+        (exitCode, output, _) <- readProcessWithExitCode "stack" ["exec", "hix", "--", "generate", "--template", "template.hix", "--model", "model.json"] ""
+        expected <- TIO.readFile ("expected.txt")
+        exitCode `shouldBe` ExitSuccess
+        T.strip (T.pack output) `shouldBe` T.strip expected

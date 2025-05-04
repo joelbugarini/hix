@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Lexer
+module Template.Lexer
   ( Token(..)
   , tokenize
   ) where
@@ -41,4 +41,6 @@ tokenize input = go input 1 1 []
                      then T.length (last (T.splitOn "\n" chunk)) + 1
                      else col + T.length chunk
               line' = line + newLines
-          in go rest line' col' (TextChunk chunk : acc)
+          in if T.null chunk
+             then go rest line col acc
+             else go rest line' col' (TextChunk chunk : acc)

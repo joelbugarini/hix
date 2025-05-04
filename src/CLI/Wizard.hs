@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Wizard
+module CLI.Wizard
   ( createDefaultConfig
   , createExampleTemplate
   ) where
@@ -11,7 +11,7 @@ import System.Directory
 import System.FilePath
 import Data.Maybe (fromMaybe)
 import Control.Monad (when)
-import qualified Config as C
+import qualified Config.Config as C
 import System.IO (hFlush, stdout)
 import Data.List (intercalate)
 

@@ -1,6 +1,6 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Help
+module CLI.Help
   ( helpMessage
   , manualMessage
   , version
