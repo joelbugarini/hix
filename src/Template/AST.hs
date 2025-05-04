@@ -18,7 +18,7 @@ data AST
   | IfBlock (Text, Text) [AST] (Maybe [AST])   -- [[if prop.type=bool]] ... [[/if]]
   | UnknownTag Text                            -- anything unrecognized
   | FuncCall Text Text                         -- e.g. [[upper prop.name]]
-  deriving (Show)
+  deriving (Show, Eq)
 
 parseTokens :: [Token] -> [AST]
 parseTokens = go

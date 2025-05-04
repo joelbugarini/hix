@@ -21,6 +21,7 @@ import qualified Data.Aeson as Aeson
 import HelpSpec
 import GenerateSpec
 import WizardSpec
+import ParserSpec
 
 helpMessage :: String
 helpMessage = init $ unlines
@@ -51,6 +52,7 @@ main = hspec $ do
   helpSpec
   generateSpec
   wizardSpec
+  ParserSpec.spec
 
   describe "Lexer" $ do
     it "tokenizes simple template" $

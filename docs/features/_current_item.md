@@ -43,3 +43,26 @@ hix generate --model ./models/user.json
 - [x] Integrate the new parser into the rendering pipeline.
 - [x] Update or add property-based tests for parser correctness.
 - [x] Ensure backward compatibility with existing templates.
+
+
+Recommended Implementation Plan
+- [x] Start Simple: Parse Literal Text and Basic Tags
+  - [x] Implement parsing for plain text (anything not inside [[...]]).
+  - [x] Implement parsing for simple variable tags like [[model.name]] and [[prop.name]].
+  - [x] Add tests for these cases.
+- [x] Handle Block Constructs
+  - [x] Implement parsing for blocks: [[prop]]...[[/prop]], [[if ...]]...[[/if]], and [[if ...]]...[[else]]...[[/if]].
+  - [x] Support nesting (e.g., [[if ...]] inside [[prop]]).
+  - [x] Add tests for block parsing and nesting.
+- [x] Support Function Calls
+  - [x] Parse constructs like [[upper model.name]], [[lower prop.name]], etc.
+  - [x] Add tests for function call parsing.
+- [x] Error Handling
+  - [x] Ensure the parser produces clear, actionable error messages (line/column info) for malformed templates.
+  - [x] Add tests for error cases (e.g., unclosed tags, unknown constructs).
+- [ ] Integrate and Migrate
+  - [ ] Gradually replace the old parser in your codebase with the new one.
+  - [ ] Run all existing tests to ensure no regressions.
+  - [ ] Update documentation to reflect the new parser.
+- [ ] Refactor and Remove Old Code
+  - [ ] Once the new parser is fully integrated and tested, remove the old custom lexer and parser.
