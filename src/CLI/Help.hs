@@ -13,7 +13,7 @@ import qualified Data.ByteString.Char8 as BS
 
 -- Version information
 version :: String
-version = "hix version 0.3.0.2"
+version = "hix version 0.3.1.0"
 
 -- Help message
 helpMessage :: String

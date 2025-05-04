@@ -104,4 +104,4 @@ helpSpec = describe "Help functionality" $ do
 
   it "should produce correct version message" $ do
     (output, _) <- capture $ putStrLn version
-    output `shouldBe` "hix version 0.3.0.2\n" 
+    output `shouldBe` "hix version 0.3.1.0\n" 
