@@ -1,68 +1,68 @@
+# Migrate Template Parser to Megaparsec for Robustness and Extensibility
+
 ## Description
-When generating code from templates, the template engine incorrectly handles property substitution, resulting in unreplaced template tokens appearing in the final output. This indicates a fundamental issue in the transformation logic where template tokens are not being properly processed during the property loop iteration.
-
-## Impact
-- Generated code contains invalid syntax with unreplaced template tokens
-- Users need to manually fix the generated files
-- This affects the reliability of the code generation process
-- May cause compilation errors in the target language
-
-## Steps to Reproduce
-1. Create a model file (e.g., `Person.json`) with properties:
-```json
-{
-  "className": "Person",
-  "properties": [
-    { "name": "Id", "type": "int" },
-    { "name": "TitleName", "type": "datetime" },
-    { "name": "IsActive", "type": "bool" }
-  ]
-}
-```
-
-2. Run the code generation command:
-```bash
-hix generate --model Person.json
-```
-
-3. Check the generated file (e.g., `PersonModel.cs`)
+Refactor the template parsing logic to use the Megaparsec library instead of the current custom parser. This will provide better error messages, easier grammar extension, and more maintainable code.
 
 ## Expected Behavior
-The generated code should be clean and valid, with all template tokens properly transformed:
-```csharp
-public class Person {
-    public int Id { get; set; }
-    public datetime TitleName { get; set; }
-    public bool IsActive { get; set; }
-}
+- The template engine uses Megaparsec for parsing templates.
+- All existing template features (e.g., `[[model.name]]`, `[[prop]]`, `[[if ...]]`, function calls) are supported.
+- Parsing errors produce clear, actionable messages with line/column info.
+- The parser is easier to extend for new template features.
+- The lexer and parser are unified into a single parsing step.
+
+## Usage Examples
+```bash
+# Generate files as before, with improved error reporting on malformed templates
+hix generate --model ./models/user.json
 ```
+- Malformed template example:
+  ```
+  public class [[model.className] {
+      [[prop]]
+      public [[prop.type]] [[prop.name]] { get; set; }
+      [[/prop]]
+  }
+  ```
+  Output:  
+  ```
+  [hix error] Parse error at line 1, column 20: expected closing ']]'
+  ```
 
-## Current Behavior
-The generated code contains unreplaced template tokens, indicating the transformation logic is not working correctly:
-```csharp
-public class Person {
-      public int Id { get; set; }
-  public datetime TitleName { get; set; }
-  public bool IsActive { get; set; }
+## Acceptance Criteria
+- [x] All template constructs are parsed using Megaparsec.
+- [x] Existing tests for template parsing and rendering pass.
+- [x] New tests added for error cases and edge cases.
+- [x] Error messages include line and column information.
+- [x] Documentation updated to reflect the new parser.
+- [x] No regressions in CLI or template generation features.
 
-    public [[prop.type]] [[prop.name]] { get; set; }
-    
-}
-```
+## Technical Considerations
+- [x] Remove or refactor the existing `Template.Lexer` and `Template.AST.parseTokens`.
+- [x] Implement a Megaparsec parser for all template constructs.
+- [x] Ensure recursive/nested constructs are handled correctly.
+- [x] Integrate the new parser into the rendering pipeline.
+- [x] Update or add property-based tests for parser correctness.
+- [x] Ensure backward compatibility with existing templates.
 
-## Environment
-- Hix Version: 0.3.0.0
-- Operating System: Windows 10
-- Additional Context: Using default templates and configuration
 
-## Suggested Fix
-1. Review the template engine's property loop transformation logic
-2. Ensure template tokens are properly processed during property iteration
-3. Add validation to verify all template tokens are transformed
-4. Add tests to verify correct template token transformation
-
-## Priority
-Medium - While it doesn't break core functionality, it requires manual intervention to fix generated code.
-
-## Additional Context
-The issue appears to be in the template engine's handling of the `[[prop]]` loop. The transformation logic is not correctly processing all template tokens during property iteration, resulting in unreplaced tokens appearing in the output. This indicates a fundamental issue in how the template engine handles property substitution rather than a cleanup problem.
+Recommended Implementation Plan
+- [x] Start Simple: Parse Literal Text and Basic Tags
+  - [x] Implement parsing for plain text (anything not inside [[...]]).
+  - [x] Implement parsing for simple variable tags like [[model.name]] and [[prop.name]].
+  - [x] Add tests for these cases.
+- [x] Handle Block Constructs
+  - [x] Implement parsing for blocks: [[prop]]...[[/prop]], [[if ...]]...[[/if]], and [[if ...]]...[[else]]...[[/if]].
+  - [x] Support nesting (e.g., [[if ...]] inside [[prop]]).
+  - [x] Add tests for block parsing and nesting.
+- [x] Support Function Calls
+  - [x] Parse constructs like [[upper model.name]], [[lower prop.name]], etc.
+  - [x] Add tests for function call parsing.
+- [x] Error Handling
+  - [x] Ensure the parser produces clear, actionable error messages (line/column info) for malformed templates.
+  - [x] Add tests for error cases (e.g., unclosed tags, unknown constructs).
+- [x] Integrate and Migrate
+  - [x] Gradually replace the old parser in your codebase with the new one.
+  - [x] Run all existing tests to ensure no regressions.
+  - [x] Update documentation to reflect the new parser.
+- [x] Refactor and Remove Old Code
+  - [x] Once the new parser is fully integrated and tested, remove the old custom lexer and parser.

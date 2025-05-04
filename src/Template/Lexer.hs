@@ -1,9 +1,9 @@
 {-# LANGUAGE OverloadedStrings #-}
 
-module Template.Lexer
-  ( Token(..)
-  , tokenize
-  ) where
+-- DEPRECATED: This module is no longer used. See Template.Parser for the new implementation.
+module Template.Lexer where
+
+-- This module is deprecated and replaced by Template.Parser.
 
 import Data.Text (Text)
 import qualified Data.Text as T

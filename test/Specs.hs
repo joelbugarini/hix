@@ -13,14 +13,15 @@ import System.IO.Silently (capture_)
 import System.Process (readProcess, readProcessWithExitCode)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
 
-import Template.Lexer (tokenize)
-import Template.AST (parseTokens, AST(..))
+import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
 import Template.Renderer (renderAST)
 import qualified Data.Aeson as Aeson
 import HelpSpec
 import GenerateSpec
 import WizardSpec
+import ParserSpec
+import Template.Parser (parseTemplate)
 
 helpMessage :: String
 helpMessage = init $ unlines
@@ -51,19 +52,17 @@ main = hspec $ do
   helpSpec
   generateSpec
   wizardSpec
+  ParserSpec.spec
 
   describe "Lexer" $ do
-    it "tokenizes simple template" $
-      let tokens = tokenize "Hello [[model.className]]!" in
-      length tokens `shouldBe` 3
+    it "tokenizes simple template (deprecated)" $
+      pendingWith "Lexer is deprecated; see Template.Parser for new parsing logic."
 
   describe "TemplateAST" $ do
     it "parses prop loop with prop.name" $
-      let tokens = tokenize "[[prop]]int [[prop.name]];[[/prop]]"
-          ast = parseTokens tokens
-      in ast `shouldSatisfy` \case
-           [PropLoop _ [Literal "int ", ModelValue "prop.name", Literal ";"]] -> True
-           _ -> False
+      case parseTemplate "[[prop]]int [[prop.name]];[[/prop]]" of
+        Right [PropLoop _ [Literal "int ", ModelValue "prop.name", Literal ";"]] -> True `shouldBe` True
+        _ -> expectationFailure "Failed to parse prop loop with prop.name"
 
   describe "Renderer" $ do
     it "renders a model class with props" $ do
@@ -71,10 +70,11 @@ main = hspec $ do
             [ Property "Id" IntType
             , Property "Title" StringType
             ]
-          tokens = tokenize "public class [[model.className]] {\n[[prop]][[prop.type]] [[prop.name]];\n[[/prop]]}"
-          ast = parseTokens tokens
-          output = renderAST ast model
-      output `shouldBe` T.stripEnd "public class Thing {\nint Id;\nstring Title;\n}"
+      case parseTemplate "public class [[model.className]] {\n[[prop]][[prop.type]] [[prop.name]];\n[[/prop]]}" of
+        Right ast -> do
+          let output = renderAST ast model
+          output `shouldBe` T.stripEnd "public class Thing {\nint Id;\nstring Title;\n}"
+        Left err -> expectationFailure $ "Parse error: " ++ err
 
     it "renders if/else blocks correctly" $ do
       let model = Model "TestModel"
@@ -90,14 +90,15 @@ main = hspec $ do
             , "[[/if]]"
             , "[[/prop]]"
             ]
-          tokens = tokenize template
-          ast = parseTokens tokens
-          output = renderAST ast model
-          expected = T.stripEnd $ T.unlines
-            [ "Input: IsAdmin"
-            , "Input: Name"
-            ]
-      removeBlankLines output `shouldBe` removeBlankLines expected
+      case parseTemplate template of
+        Right ast -> do
+          let output = renderAST ast model
+              expected = T.stripEnd $ T.unlines
+                [ "Input: IsAdmin"
+                , "Input: Name"
+                ]
+          removeBlankLines output `shouldBe` removeBlankLines expected
+        Left err -> expectationFailure $ "Parse error: " ++ err
 
   describe "CLI" $ do
     it "handles model name replacement correctly" $ do
@@ -107,8 +108,11 @@ main = hspec $ do
       expected <- TIO.readFile (dir </> "expected.txt")
       case decodeModel modelJson of
         Right model ->
-          let output = renderAST (parseTokens (tokenize template)) model
-           in removeBlankLines output `shouldBe` removeBlankLines expected
+          case parseTemplate template of
+            Right ast ->
+              let output = renderAST ast model
+               in removeBlankLines output `shouldBe` removeBlankLines expected
+            Left err -> expectationFailure $ "Parse error: " ++ err
         Left err -> expectationFailure $ "Failed to decode model: " ++ err
 
     it "shows help message when no arguments provided" $ do
@@ -154,8 +158,11 @@ goldenTest name = it ("matches golden output for " ++ name) $ do
   expected <- TIO.readFile (dir </> "expected.txt")
   case decodeModel modelJson of
     Right model ->
-      let output = renderAST (parseTokens (tokenize template)) model
-       in removeBlankLines output `shouldBe` removeBlankLines expected
+      case parseTemplate template of
+        Right ast ->
+          let output = renderAST ast model
+           in removeBlankLines output `shouldBe` removeBlankLines expected
+        Left err -> expectationFailure $ "Parse error: " ++ err
     Left err -> expectationFailure $ "Failed to decode model: " ++ err
 
 -- 🧠 Decode JSON model from Text

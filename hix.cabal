@@ -1,7 +1,7 @@
 cabal-version:       2.2
 
 name:                hix
-version:             0.3.0.2
+version:             0.3.1.0
 
 homepage:            https://github.com/githubuser/hix#readme
 license:             BSD-3-Clause
@@ -26,6 +26,7 @@ library
     , Config.Config
     , CLI.Wizard
     , CLI.Help
+    , Template.Parser
   hs-source-dirs:      src
   build-depends:
       base >= 4.7 && < 5
@@ -36,6 +37,8 @@ library
     , filepath
     , yaml
     , directory
+    , containers
+    , megaparsec >=9.0
   default-language:    Haskell2010
 
 executable hix
@@ -48,6 +51,9 @@ executable hix
     , aeson
     , filepath
     , directory
+    , containers
+    , bytestring
+    , megaparsec >=9.0
   default-language:    Haskell2010
   ghc-options:
     -Wall
@@ -68,6 +74,7 @@ test-suite hix-tests
       HelpSpec
     , GenerateSpec
     , WizardSpec
+    , ParserSpec
   hs-source-dirs:      test
   build-depends:
       base
@@ -83,5 +90,6 @@ test-suite hix-tests
     , process
     , bytestring
     , silently
+    , megaparsec >=9.0
   default-language:    Haskell2010
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N

@@ -14,10 +14,9 @@ import CLI.Help (helpMessage, manualMessage, version)
 import Data.List (find)
 import System.Exit (exitFailure)
 import Control.Monad (when)
-import Template.Lexer (tokenize)
-import Template.AST (parseTokens)
 import Template.Renderer (renderAST, warnOnUnhandledTokens)
 import qualified Data.Text.IO as TIO
+import Template.Parser (parseTemplate)
 
 main :: IO ()
 main = do
@@ -84,11 +83,12 @@ handleGenerateCommand cmdArgs = do
             exitFailure
           else do
             templateContent <- readFile templatePath
-            let tokens = tokenize (T.pack templateContent)
-                ast = parseTokens tokens
-                code = renderAST ast modelData
-            warnOnUnhandledTokens code
-            TIO.putStrLn code
+            case parseTemplate (T.pack templateContent) of
+              Left err -> putStrLn ("Template parse error: " ++ err) >> exitFailure
+              Right ast -> do
+                let code = renderAST ast modelData
+                warnOnUnhandledTokens code
+                TIO.putStrLn code
   else do
     let modelArg = findArg "--model" cmdArgs
         layerArg = findArg "--layer" cmdArgs
@@ -193,14 +193,15 @@ generateTemplateWithUserPath layer modelData template userTemplatePath = do
       putStrLn $ "Error: Template '" ++ userTemplatePath ++ "' not found"
       exitFailure
     else do
-      let outputPath = C.path layer </> T.unpack (T.replace "[[model.className]]" (className modelData) $ C.filename template)
-      createDirectoryIfMissing True (C.path layer)
       templateContent <- readFile templatePath
-      let tokens = tokenize (T.pack templateContent)
-          ast = parseTokens tokens
-          code = renderAST ast modelData
-      warnOnUnhandledTokens code
-      TIO.writeFile outputPath code
+      case parseTemplate (T.pack templateContent) of
+        Left err -> putStrLn ("Template parse error: " ++ err) >> exitFailure
+        Right ast -> do
+          let outputPath = C.path layer </> T.unpack (T.replace "[[model.className]]" (className modelData) $ C.filename template)
+          createDirectoryIfMissing True (C.path layer)
+          let code = renderAST ast modelData
+          warnOnUnhandledTokens code
+          TIO.writeFile outputPath code
 
 -- Function to generate code for a layer
 generateCodeForLayer :: C.Layer -> Model -> IO ()
