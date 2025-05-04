@@ -60,9 +60,9 @@ Recommended Implementation Plan
 - [x] Error Handling
   - [x] Ensure the parser produces clear, actionable error messages (line/column info) for malformed templates.
   - [x] Add tests for error cases (e.g., unclosed tags, unknown constructs).
-- [ ] Integrate and Migrate
-  - [ ] Gradually replace the old parser in your codebase with the new one.
-  - [ ] Run all existing tests to ensure no regressions.
-  - [ ] Update documentation to reflect the new parser.
-- [ ] Refactor and Remove Old Code
-  - [ ] Once the new parser is fully integrated and tested, remove the old custom lexer and parser.
+- [x] Integrate and Migrate
+  - [x] Gradually replace the old parser in your codebase with the new one.
+  - [x] Run all existing tests to ensure no regressions.
+  - [x] Update documentation to reflect the new parser.
+- [x] Refactor and Remove Old Code
+  - [x] Once the new parser is fully integrated and tested, remove the old custom lexer and parser.
