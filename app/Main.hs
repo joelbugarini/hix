@@ -16,7 +16,7 @@ import System.Exit (exitFailure)
 import Control.Monad (when)
 import Template.Lexer (tokenize)
 import Template.AST (parseTokens)
-import Template.Renderer (renderAST)
+import Template.Renderer (renderAST, warnOnUnhandledTokens)
 import qualified Data.Text.IO as TIO
 
 main :: IO ()
@@ -87,6 +87,7 @@ handleGenerateCommand cmdArgs = do
             let tokens = tokenize (T.pack templateContent)
                 ast = parseTokens tokens
                 code = renderAST ast modelData
+            warnOnUnhandledTokens code
             TIO.putStrLn code
   else do
     let modelArg = findArg "--model" cmdArgs
@@ -198,6 +199,7 @@ generateTemplateWithUserPath layer modelData template userTemplatePath = do
       let tokens = tokenize (T.pack templateContent)
           ast = parseTokens tokens
           code = renderAST ast modelData
+      warnOnUnhandledTokens code
       TIO.writeFile outputPath code
 
 -- Function to generate code for a layer

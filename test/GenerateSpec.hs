@@ -276,7 +276,7 @@ generateSpec = describe "Generate Command" $ do
       
       -- Verify that all template tokens have been properly transformed
       let hasUntransformedTokens = T.isInfixOf "[[" content
-      hasUntransformedTokens `shouldBe` True
+      hasUntransformedTokens `shouldBe` False
       
       -- Verify the expected properties are present and correctly transformed
       let hasId = T.isInfixOf "public int Id" content
@@ -340,7 +340,7 @@ generateSpec = describe "Generate Command" $ do
       
       -- Verify that all template tokens have been properly transformed
       let hasUntransformedTokens = T.isInfixOf "[[" content
-      hasUntransformedTokens `shouldBe` True
+      hasUntransformedTokens `shouldBe` False
       
       -- Verify the expected properties are present
       let hasId = T.isInfixOf "public int Id" content
