@@ -1,4 +1,14 @@
 public class Person {
 string Name;
 int Age;
+datetime CreatedAt;
+bool IsActive;
+float Score;
+double Rating;
+decimal Balance;
+text Description;
+uuid UserId;
+date BirthDate;
+time LoginTime;
+binary ProfilePic;
 }

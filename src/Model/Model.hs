@@ -13,7 +13,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Char (toLower)
 
-data PropertyType = IntType | StringType | DateTimeType | BoolType
+data PropertyType = IntType | StringType | DateTimeType | BoolType | FloatType | DoubleType | DecimalType | TextType | UUIDType | DateType | TimeType | BinaryType
   deriving (Eq)
 
 instance Show PropertyType where
@@ -21,13 +21,29 @@ instance Show PropertyType where
   show StringType = "string"
   show DateTimeType = "datetime"
   show BoolType = "bool"
+  show FloatType = "float"
+  show DoubleType = "double"
+  show DecimalType = "decimal"
+  show TextType = "text"
+  show UUIDType = "uuid"
+  show DateType = "date"
+  show TimeType = "time"
+  show BinaryType = "binary"
 
 instance FromJSON PropertyType where
   parseJSON = withText "PropertyType" $ \v -> case T.toLower v of
-    "int" -> pure IntType
-    "string" -> pure StringType
+    "int"      -> pure IntType
+    "string"   -> pure StringType
     "datetime" -> pure DateTimeType
-    "bool" -> pure BoolType
+    "bool"     -> pure BoolType
+    "float"    -> pure FloatType
+    "double"   -> pure DoubleType
+    "decimal"  -> pure DecimalType
+    "text"     -> pure TextType
+    "uuid"     -> pure UUIDType
+    "date"     -> pure DateType
+    "time"     -> pure TimeType
+    "binary"   -> pure BinaryType
     _ -> fail $ "Unknown property type: " ++ show v
 
 data Property = Property

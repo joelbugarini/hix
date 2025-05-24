@@ -2,7 +2,17 @@
     "className": "Person",
     "properties": [
       { "name": "Name", "type": "string" },
-      { "name": "Age", "type": "int" }
+      { "name": "Age", "type": "int" },
+      { "name": "CreatedAt", "type": "datetime" },
+      { "name": "IsActive", "type": "bool" },
+      { "name": "Score", "type": "float" },
+      { "name": "Rating", "type": "double" },
+      { "name": "Balance", "type": "decimal" },
+      { "name": "Description", "type": "text" },
+      { "name": "UserId", "type": "uuid" },
+      { "name": "BirthDate", "type": "date" },
+      { "name": "LoginTime", "type": "time" },
+      { "name": "ProfilePic", "type": "binary" }
     ]
   }
   
