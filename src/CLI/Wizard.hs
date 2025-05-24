@@ -122,6 +122,30 @@ createDefaultConfig root = do
   -- Create .gitkeep in output directory
   TIO.writeFile (hixRoot </> "output" </> ".gitkeep") ""
 
+  -- Create default model file if it doesn't exist
+  let defaultModelPath = hixRoot </> "models" </> "Person.json"
+  modelExists <- doesFileExist defaultModelPath
+  when (not modelExists) $
+    TIO.writeFile defaultModelPath $ T.pack $ unlines
+      [ "{"
+      , "    \"className\": \"Person\"," 
+      , "    \"properties\": ["
+      , "      { \"name\": \"Name\", \"type\": \"string\" },"
+      , "      { \"name\": \"Age\", \"type\": \"int\" },"
+      , "      { \"name\": \"CreatedAt\", \"type\": \"datetime\" },"
+      , "      { \"name\": \"IsActive\", \"type\": \"bool\" },"
+      , "      { \"name\": \"Score\", \"type\": \"float\" },"
+      , "      { \"name\": \"Rating\", \"type\": \"double\" },"
+      , "      { \"name\": \"Balance\", \"type\": \"decimal\" },"
+      , "      { \"name\": \"Description\", \"type\": \"text\" },"
+      , "      { \"name\": \"UserId\", \"type\": \"uuid\" },"
+      , "      { \"name\": \"BirthDate\", \"type\": \"date\" },"
+      , "      { \"name\": \"LoginTime\", \"type\": \"time\" },"
+      , "      { \"name\": \"ProfilePic\", \"type\": \"binary\" }"
+      , "    ]"
+      , "}"
+      ]
+
 -- Add default template to a layer
 addDefaultTemplate :: FilePath -> C.Layer -> C.Layer
 addDefaultTemplate hixRoot layer = layer { C.templates = [defaultTemplate] }

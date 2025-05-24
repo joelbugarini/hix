@@ -121,4 +121,38 @@ wizardSpec = describe "Wizard Configuration" $ do
             
             hasArchitecture `shouldBe` True
             hasLayers `shouldBe` True
-            hasOutputRoot `shouldBe` True) 
+            hasOutputRoot `shouldBe` True)
+
+  it "creates a default model file in .hix/models/Person.json" $ do
+    testDir <- getCurrentDirectory
+    let tempDir = testDir </> "temp_wizard_test_model"
+        hixPath = testDir </> ".stack-work" </> "install" </> "72d79149" </> "bin" </> "hix.exe"
+    
+    bracket
+      (do
+        createDirectoryIfMissing True tempDir
+        setCurrentDirectory tempDir
+        return tempDir)
+      (\_ -> do
+        setCurrentDirectory testDir
+        removeDirectoryRecursive tempDir)
+      (\_ -> do
+        let processConfig = (proc hixPath ["init"])
+              { std_in = CreatePipe
+              , std_out = CreatePipe
+              , std_err = CreatePipe
+              }
+        (Just stdin, Just stdout, Just stderr, processHandle) <- createProcess processConfig
+        
+        -- Send input to select architecture type (2 for clean architecture)
+        hPutStrLn stdin "2"
+        hPutStrLn stdin "n"  -- No to configuring templates
+        hClose stdin
+        
+        -- Wait for the process to complete
+        exitCode <- waitForProcess processHandle
+        exitCode `shouldBe` ExitSuccess
+        
+        modelPath <- getCurrentDirectory >>= \dir -> return (dir </> ".hix" </> "models" </> "Person.json")
+        modelExists <- doesFileExist modelPath
+        modelExists `shouldBe` True) 
