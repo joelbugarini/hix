@@ -1,50 +1,64 @@
-Add automatic empty template file generation
+# Model Name Case Transformation
 
-## Description
-Add functionality to automatically generate empty files for defined templates after config file creation, making it easier for users to start working with their templates.
+## Overview
+This feature extends the existing case transformation functions (snake_case, lower, upper) to work with model names in addition to property names. This will provide more flexibility in template generation by allowing case transformations on both model and property names. A new kebab-case function will also be added to support this common naming convention.
 
-## Expected Behavior
-Command: hix init --config <config_path> [--output <output_dir>]
-When no output directory specified: Generates files in default template directory (.hix folder)
-When output directory specified: Generates files in the specified directory
-Creates empty files for all defined templates
-Preserves template directory structure
-Usage Examples
-# Generate empty files in default template directory
-hix init --config ./config.json
+## Requirements
 
-# Generate empty files in custom directory
-hix init --config ./config.json --output ./my-templates
+### Functional Requirements
+1. Support case transformation functions for model.Name:
+   - snake_case(model.Name)
+   - lower(model.Name)
+   - upper(model.Name)
+   - kebab_case(model.Name)
+2. Maintain existing functionality for property names
+3. Handle edge cases:
+   - Empty model names
+   - Model names with special characters
+   - Model names with numbers
 
-# Example of generated structure
-```shell
-./templates/
-  ├── domain/
-  │   └── User.hix
-  ├── infrastructure/
-  │   └── UserRepository.hix
-  └── application/
-      └── UserService.hix
-```
+### Technical Requirements
+1. Update the template engine to recognize model.Name as a valid target for case transformations
+2. Add unit tests for each case transformation function with model names
+3. Add integration tests for templates using model name transformations
+4. Update documentation to reflect new functionality
+5. Implement new kebab_case function with the following rules:
+   - Convert camelCase to kebab-case (e.g., "userName" -> "user-name")
+   - Convert PascalCase to kebab-case (e.g., "UserName" -> "user-name")
+   - Convert snake_case to kebab-case (e.g., "user_name" -> "user-name")
+   - Handle numbers appropriately (e.g., "user2Name" -> "user-2-name")
 
-## Acceptance Criteria
-- [ ] CLI accepts config path and optional output directory parameter
-- [ ] Generates empty files for all defined templates
-- [ ] Creates appropriate directory structure
-- [ ] Handles existing files gracefully
-- [ ] Provides clear feedback on created files
-- [ ] Works across different operating systems
-- [ ] No regression in existing functionality
-- [ ] Includes tests for all functionality
-- [ ] Documentation updated with new commands
+### Documentation Requirements
+1. Update template function documentation to include model.Name examples
+2. Add usage examples in the documentation
+3. Document any edge cases or limitations
 
-Technical Considerations
-- File system operations safety
-- Directory structure preservation
-- File path resolution
-- Error handling
-- Support for relative and absolute paths
-- Cross-platform compatibility
-- File permissions management
-- Template validation
-- Config file parsing
+## Implementation Plan
+1. Modify the template engine to parse model.Name expressions
+2. Extend case transformation functions to handle model names
+3. Add test cases
+4. Update documentation
+5. Add example templates demonstrating the new functionality
+
+## Testing Strategy
+1. Unit tests for each case transformation function
+2. Integration tests with various template scenarios
+3. Edge case testing
+4. Performance testing to ensure no degradation
+
+## Success Criteria
+1. All case transformation functions work correctly with model.Name
+2. No regression in existing functionality
+3. Documentation is complete and clear
+4. All tests pass
+5. Performance impact is minimal
+
+## Dependencies
+- Existing template engine
+- Case transformation functions
+- Template parser
+
+## Notes
+- This feature enhances existing functionality without breaking changes
+- Should be backward compatible
+- May require updates to example templates 

@@ -1,7 +1,7 @@
 cabal-version:       2.2
 
 name:                hix
-version:             0.3.3.0
+version:             0.3.4.0
 
 homepage:            https://github.com/githubuser/hix#readme
 license:             BSD-3-Clause

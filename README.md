@@ -11,7 +11,7 @@
  - ⚙️ Drop-in CLI with Windows installer and editor integration
  - 🧠 Built with Haskell for safe, predictable rendering
 
- _“Build once. Template forever. Let Hix do the repetition.”_
+ _"Build once. Template forever. Let Hix do the repetition."_
 
 # Hix 🧩 – Flexible Code Generator
 
@@ -31,7 +31,7 @@ Full documentation is available at:
 
 - 🔁 `[[prop]]` loops over model properties
 - ❓ `[[if ...]]`, `[[else]]` conditionals
-- 🔤 Text transformation functions: `[[upper ...]]`, `[[lower ...]]`, `[[snake_case ...]]`
+- 🔤 Text transformation functions: `[[upper ...]]`, `[[lower ...]]`, `[[snake_case ...]]`, `[[kebab_case ...]]`, `[[lowerFirst ...]]`
 - 🧠 Full AST parser and golden test suite
 - 🎨 VS Code / TextMate grammar for syntax highlighting
 - 🪟 Windows installer with PATH integration

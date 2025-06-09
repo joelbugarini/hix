@@ -52,6 +52,8 @@ Apply transformations to values:
 [[upper prop.name]]     => MYFIELD
 [[lower prop.name]]     => myfield
 [[snake_case prop.name]] => my_field
+[[kebab_case prop.name]] => my-field
+[[lowerFirst prop.name]] => myField
 ```
 
 ---

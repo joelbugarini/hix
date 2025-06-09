@@ -1,0 +1,52 @@
+{
+  "scopeName": "source.hix",
+  "fileTypes": ["hix"],
+  "grammarName": "Hix",
+  "uuid": "hix-template-language",
+  "patterns": [
+    {
+      "name": "keyword.control.hix.block.begin",
+      "match": "\\[\\[\\s*prop\\s*\\]\\]"
+    },
+    {
+      "name": "keyword.control.hix.block.end",
+      "match": "\\[\\[\\s*/prop\\s*\\]\\]"
+    },
+    {
+      "name": "keyword.control.hix.conditional.begin",
+      "match": "\\[\\[\\s*if\\b[^\\]]*\\]\\]"
+    },
+    {
+      "name": "keyword.control.hix.conditional.end",
+      "match": "\\[\\[\\s*/if\\s*\\]\\]"
+    },
+    {
+      "name": "keyword.control.hix.conditional.else",
+      "match": "\\[\\[\\s*else\\s*\\]\\]"
+    },
+    {
+      "name": "variable.other.hix",
+      "match": "\\[\\[\\s*(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
+    },
+    {
+      "name": "support.function.hix.upper",
+      "match": "\\[\\[\\s*upper\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
+    },
+    {
+      "name": "support.function.hix.lower",
+      "match": "\\[\\[\\s*lower\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
+    },
+    {
+      "name": "support.function.hix.snake_case",
+      "match": "\\[\\[\\s*snake_case\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
+    },
+    {
+      "name": "support.function.hix.kebab_case",
+      "match": "\\[\\[\\s*kebab_case\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
+    },
+    {
+      "name": "support.function.hix.lowerFirst",
+      "match": "\\[\\[\\s*lowerFirst\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
+    }
+  ]
+} 

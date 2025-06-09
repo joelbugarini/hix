@@ -46,6 +46,8 @@ writeGrammarFile outputPath = do
           , Pattern "support.function.hix.upper" "\\[\\[\\s*upper\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
           , Pattern "support.function.hix.lower" "\\[\\[\\s*lower\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
           , Pattern "support.function.hix.snake_case" "\\[\\[\\s*snake_case\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
+          , Pattern "support.function.hix.kebab_case" "\\[\\[\\s*kebab_case\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
+          , Pattern "support.function.hix.lowerFirst" "\\[\\[\\s*lowerFirst\\s+(?:model|prop)\\.[a-zA-Z0-9_]+\\s*\\]\\]"
           ]
         }
   BL.writeFile outputPath (encode grammar)

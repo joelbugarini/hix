@@ -4,7 +4,7 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
-import Data.Char (isUpper, isLower)
+import Data.Char (isUpper, isLower, toLower)
 
 propertyTypeToText :: PropertyType -> Text
 propertyTypeToText = T.pack . show
@@ -40,10 +40,20 @@ applyFunc fn t
   | fn == T.pack "upper" = T.toUpper t
   | fn == T.pack "lower" = T.toLower t
   | fn == T.pack "snake_case" = toSnake t
+  | fn == T.pack "kebab_case" = toKebab t
+  | fn == T.pack "lowerFirst" = toLowerFirst t
   | otherwise = T.pack "--[[Unknown func]] " <> t
 
 toSnake :: Text -> Text
 toSnake = T.intercalate (T.pack "_") . map T.toLower . camelSplit
+
+toKebab :: Text -> Text
+toKebab = T.intercalate (T.pack "-") . map T.toLower . camelSplit
+
+toLowerFirst :: Text -> Text
+toLowerFirst t = case T.uncons t of
+  Nothing -> t
+  Just (c, rest) -> T.cons (toLower c) rest
 
 camelSplit :: Text -> [Text]
 camelSplit = go . T.unpack

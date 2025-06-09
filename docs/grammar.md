@@ -23,7 +23,7 @@ Hix grammar supports the following highlights:
 - `[[prop]]`, `[[/prop]]`: property block keywords
 - `[[if ...]]`, `[[else]]`, `[[/if]]`: conditional blocks
 - `[[prop.name]]`, `[[prop.type]]`, `[[model.className]]`: variables
-- `[[upper ...]]`, `[[lower ...]]`, `[[snake_case ...]]`: functions
+- `[[upper ...]]`, `[[lower ...]]`, `[[snake_case ...]]`, `[[kebab_case ...]]`, `[[lowerFirst ...]]`: functions
 
 ---
 

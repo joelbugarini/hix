@@ -17,6 +17,7 @@ import Control.Monad (when)
 import Template.Renderer (renderAST, warnOnUnhandledTokens)
 import qualified Data.Text.IO as TIO
 import Template.Parser (parseTemplate)
+import qualified Grammar.GrammarGen as GrammarGen
 
 main :: IO ()
 main = do
@@ -34,9 +35,11 @@ main = do
       W.createDefaultConfig currentDir
       putStrLn "Configuration created successfully!"
       putStrLn "You can now customize the layers and templates in .hix/config.yaml"
-    
+    ["--gen-grammar", out] -> GrammarGen.writeGrammarFile out
+    ["generate-grammar", out] -> GrammarGen.writeGrammarFile out
+    ["--gen-grammar"] -> putStrLn "Please provide an output file, e.g. hix --gen-grammar hix.tmLanguage.json"
+    ["generate-grammar"] -> putStrLn "Please provide an output file, e.g. hix generate-grammar hix.tmLanguage.json"
     "generate":restArgs -> handleGenerateCommand restArgs
-    
     (modelArg:_) -> do
       let modelName = modelArg ++ ".json"
       -- Load the model
@@ -52,7 +55,6 @@ main = do
               -- Print architecture info
               putStrLn $ "Architecture: " ++ T.unpack (C.architecture config)
               putStrLn $ "Output Root: " ++ fromMaybe "./src" (C.output_root config)
-              
               -- Print layer info and generate code
               mapM_ (\layer -> do
                 putStrLn $ T.unpack (C.name layer) ++ " Layer: " ++ C.path layer

@@ -1,8 +1,12 @@
 // [[upper model.className]]
+// [[kebab_case model.className]]
+// [[lowerFirst model.className]]
 
 [[prop]]
 // ORIGINAL: [[prop.name]]
 // UPPER: [[upper prop.name]]
 // LOWER: [[lower prop.name]]
 // SNAKE: [[snake_case prop.name]]
+// KEBAB: [[kebab_case prop.name]]
+// LOWERFIRST: [[lowerFirst prop.name]]
 [[/prop]]

@@ -1,14 +1,22 @@
 // TESTMODEL
+// test-model
+// testModel
 
 // ORIGINAL: FirstName
 // UPPER: FIRSTNAME
 // LOWER: firstname
 // SNAKE: first_name
+// KEBAB: first-name
+// LOWERFIRST: firstName
 // ORIGINAL: BirthDate
 // UPPER: BIRTHDATE
 // LOWER: birthdate
 // SNAKE: birth_date
+// KEBAB: birth-date
+// LOWERFIRST: birthDate
 // ORIGINAL: IsAdmin
 // UPPER: ISADMIN
 // LOWER: isadmin
 // SNAKE: is_admin
+// KEBAB: is-admin
+// LOWERFIRST: isAdmin
