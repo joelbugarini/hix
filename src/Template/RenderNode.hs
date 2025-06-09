@@ -4,13 +4,26 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
-import Template.RenderProp (renderPropBlock, propertyTypeToText, applyFunc)
+import Template.RenderProp (renderPropBlock, propertyTypeToText, applyFunc, toSnake, toKebab, toLowerFirst)
+import Config.ModuleTransform (transformModuleName)
 
 renderNode :: Model -> AST -> Text
 renderNode _ (Literal t) = t
 renderNode model (ModelValue t) | t == T.pack "model.className" = className model
 renderNode model (FuncCall fn arg)
-  | arg == T.pack "model.className" = applyFunc fn (className model)
+  | fn == T.pack "module_transform" = 
+      case T.words arg of
+        (style:rest) -> 
+          let value = case T.unwords rest of
+                x | x == T.pack "model.className" -> className model
+                _ -> T.pack ("--[[Invalid module_transform value: " ++ T.unpack (T.unwords rest) ++ "]]" )
+          in transformModuleName style value
+  | fn == T.pack "upper" && arg == T.pack "model.className" = T.toUpper (className model)
+  | fn == T.pack "lower" && arg == T.pack "model.className" = T.toLower (className model)
+  | fn == T.pack "snake_case" && arg == T.pack "model.className" = toSnake (className model)
+  | fn == T.pack "kebab_case" && arg == T.pack "model.className" = toKebab (className model)
+  | fn == T.pack "lowerFirst" && arg == T.pack "model.className" = toLowerFirst (className model)
+  | arg == T.pack "model.className" = className model
   | T.pack "model." `T.isPrefixOf` arg = T.pack ("--[[Unknown func arg: " ++ T.unpack arg ++ "]]" )
   | otherwise = T.pack ("--[[Unsupported func arg: " ++ T.unpack arg ++ "]]" )
 renderNode _ (ModelValue _) = T.empty

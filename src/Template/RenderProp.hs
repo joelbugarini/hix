@@ -1,4 +1,4 @@
-module Template.RenderProp (renderPropNode, renderPropBlock, propertyTypeToText, applyFunc) where
+module Template.RenderProp (renderPropNode, renderPropBlock, propertyTypeToText, applyFunc, toSnake, toKebab, toLowerFirst) where
 
 import Data.Text (Text)
 import qualified Data.Text as T

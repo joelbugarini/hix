@@ -16,17 +16,18 @@ extra-source-files:  README.md
 
 library
   exposed-modules:
-      Model.Model
-    , Template.Lexer
+      CLI.Help
+    , CLI.Wizard
+    , Config.Config
+    , Config.ModuleTransform
+    , Grammar.GrammarGen
+    , Model.Model
     , Template.AST
-    , Template.Renderer
+    , Template.Lexer
+    , Template.Parser
     , Template.RenderNode
     , Template.RenderProp
-    , Grammar.GrammarGen
-    , Config.Config
-    , CLI.Wizard
-    , CLI.Help
-    , Template.Parser
+    , Template.Renderer
   hs-source-dirs:      src
   build-depends:
       base >= 4.7 && < 5
@@ -75,6 +76,7 @@ test-suite hix-tests
     , GenerateSpec
     , WizardSpec
     , ParserSpec
+    , ModuleTransformSpec
   hs-source-dirs:      test
   build-depends:
       base

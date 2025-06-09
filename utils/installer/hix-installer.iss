@@ -1,5 +1,5 @@
 #define MyAppName "Hix"
-#define MyAppVersion "0.3.4.0"
+#define MyAppVersion "0.3.5.3"
 #define MyAppPublisher "StackPatterns"
 #define MyAppURL "https://github.com/joelbugarini/hix"
 #define MyAppExeName "hix.exe"

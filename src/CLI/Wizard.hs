@@ -154,6 +154,7 @@ addDefaultTemplate hixRoot layer = layer { C.templates = [defaultTemplate] }
       (hixRoot </> "templates" </> toLower (T.unpack (C.name layer)) </> "Entity.hix")
       (T.pack "[[model.className]].cs")
       "model"
+      Nothing
 
 -- Create default template file for a layer
 createDefaultTemplateFile :: FilePath -> C.Layer -> IO ()
@@ -205,7 +206,8 @@ configureLayerTemplates hixRoot layer = do
   let templateFiles = map (\name -> C.Template 
         (hixRoot </> "templates" </> toLower (T.unpack (C.name layer)) </> name <.> "hix")
         (T.pack $ "[[model.className]]" ++ name <.> "cs")
-        "model") templates
+        "model"
+        Nothing) templates
   return layer { C.templates = templateFiles }
   where
     getTemplates :: IO [String]
@@ -233,6 +235,10 @@ formatTemplate tmpl = T.concat
   [ "      - template: \"", T.pack (fixPath $ C.template tmpl), "\"\n"
   , "        filename: \"", C.filename tmpl, "\"\n"
   , "        output_by: \"", C.output_by tmpl, "\"\n"
+  -- Optionally add module_transform if present
+  , case C.module_transform tmpl of
+      Just mt -> "        module_transform: \"" <> mt <> "\"\n"
+      Nothing -> ""
   ]
 
 -- Helper function to convert backslashes to forward slashes

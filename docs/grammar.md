@@ -20,10 +20,29 @@ This generates a `hix.tmLanguage.json` file that can be used in editor extension
 
 Hix grammar supports the following highlights:
 
-- `[[prop]]`, `[[/prop]]`: property block keywords
+### Block Keywords
+- `[[prop]]`, `[[/prop]]`: property iteration blocks
 - `[[if ...]]`, `[[else]]`, `[[/if]]`: conditional blocks
-- `[[prop.name]]`, `[[prop.type]]`, `[[model.className]]`: variables
-- `[[upper ...]]`, `[[lower ...]]`, `[[snake_case ...]]`, `[[kebab_case ...]]`, `[[lowerFirst ...]]`: functions
+
+### Variables
+- `[[prop.name]]`: property name
+- `[[prop.type]]`: property type
+- `[[model.className]]`: model class name
+- `[[model.name]]`: model name
+
+### Functions
+#### Case Transformations
+- `[[upper ...]]`: Convert to uppercase
+- `[[lower ...]]`: Convert to lowercase
+- `[[snake_case ...]]`: Convert to snake_case
+- `[[kebab_case ...]]`: Convert to kebab-case
+- `[[lowerFirst ...]]`: Convert first letter to lowercase
+
+#### Module Transformations
+- `[[module_transform ...]]`: Transform module names in paths
+  - Supports all case transformation functions
+  - Works with nested module paths
+  - Example: `[[module_transform snake_case]]`
 
 ---
 
@@ -40,3 +59,5 @@ Hix grammar supports the following highlights:
 - Language Server Protocol (LSP) support
 - Live preview pane for rendered templates
 - Validation & auto-completion
+- Enhanced module path transformations
+- Custom function definitions

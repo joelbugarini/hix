@@ -17,10 +17,11 @@ import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
 import Template.Renderer (renderAST)
 import qualified Data.Aeson as Aeson
-import HelpSpec
-import GenerateSpec
-import WizardSpec
-import ParserSpec
+import HelpSpec (helpSpec)
+import GenerateSpec (generateSpec)
+import WizardSpec (wizardSpec)
+import qualified ParserSpec
+import qualified ModuleTransformSpec
 import Template.Parser (parseTemplate)
 
 helpMessage :: String
@@ -53,6 +54,7 @@ main = hspec $ do
   generateSpec
   wizardSpec
   ParserSpec.spec
+  ModuleTransformSpec.spec
 
   describe "Lexer" $ do
     it "tokenizes simple template (deprecated)" $

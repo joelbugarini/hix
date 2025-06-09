@@ -199,11 +199,16 @@ generateTemplateWithUserPath layer modelData template userTemplatePath = do
       case parseTemplate (T.pack templateContent) of
         Left err -> putStrLn ("Template parse error: " ++ err) >> exitFailure
         Right ast -> do
-          let outputPath = C.path layer </> T.unpack (T.replace "[[model.className]]" (className modelData) $ C.filename template)
-          createDirectoryIfMissing True (C.path layer)
-          let code = renderAST ast modelData
-          warnOnUnhandledTokens code
-          TIO.writeFile outputPath code
+          let filenameTemplate = C.filename template
+          case parseTemplate filenameTemplate of
+            Left err -> putStrLn ("Filename template parse error: " ++ err) >> exitFailure
+            Right filenameAst -> do
+              let renderedFilename = renderAST filenameAst modelData
+                  outputPath = C.path layer </> T.unpack renderedFilename
+              createDirectoryIfMissing True (C.path layer)
+              let code = renderAST ast modelData
+              warnOnUnhandledTokens code
+              TIO.writeFile outputPath code
 
 -- Function to generate code for a layer
 generateCodeForLayer :: C.Layer -> Model -> IO ()

@@ -1,0 +1,36 @@
+# Example config.yaml showing case transformation usage
+
+templates:
+  # Example 1: Using snake_case for module names
+  - template: ./templates/entity.hix
+    filename: "[[module_transform snake_case model.className]].cs"
+    output_by: model
+
+  # Example 2: Using kebab-case for module names
+  - template: ./templates/controller.hix
+    filename: "[[module_transform kebab_case model.className]]Controller.cs"
+    output_by: model
+
+  # Example 3: Using lowercase for module names
+  - template: ./templates/dto.hix
+    filename: "[[module_transform lower model.className]]Dto.cs"
+    output_by: model
+
+  # Example 4: Using uppercase for module names
+  - template: ./templates/constants.hix
+    filename: "[[module_transform upper model.className]]Constants.cs"
+    output_by: model
+
+  # Example 5: Using lowerFirst for module names
+  - template: ./templates/service.hix
+    filename: "[[module_transform lowerFirst model.className]]Service.cs"
+    output_by: model
+
+  # Example 6: Nested module paths with transformation
+  - template: ./templates/repository.hix
+    filename: "Repositories/[[module_transform snake_case model.className]]Repository.cs"
+    output_by: model
+
+# You can also use these transformations in other parts of your config
+output:
+  base_path: "src/[[module_transform snake_case model.className]]" 

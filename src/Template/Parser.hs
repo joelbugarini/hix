@@ -76,6 +76,8 @@ parseFuncCall txt =
   let ws = T.words txt
   in case ws of
     (fn:arg:[]) -> Just (fn, arg)
+    (fn:style:arg:[]) | fn == "module_transform" -> Just (fn, T.unwords [style, arg])
+    (fn:style:arg:rest) | fn == "module_transform" -> Just (fn, T.unwords (style:arg:rest))
     _           -> Nothing
 
 -- | Parser for [[prop]] ... [[/prop]] blocks
