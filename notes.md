@@ -30,6 +30,8 @@ Files that need version updates:
 - hix.cabal (source of truth)
 - test/data/version.golden
 - utils/installer/hix-installer.iss
+- src\CLI\Help.hs
+- test\HelpSpec.hs
 
 # features
 lets add a new feature to the project, help me follow the due process. first let me explain how that should work. 
