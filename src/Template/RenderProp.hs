@@ -11,7 +11,7 @@ propertyTypeToText :: PropertyType -> Text
 propertyTypeToText = T.pack . show
 
 renderPropBlock :: (Model -> AST -> Text) -> Model -> Property -> [AST] -> Text
-renderPropBlock modelRenderer model prop asts = T.unlines $ map (T.strip . renderPropNode modelRenderer model prop) asts
+renderPropBlock modelRenderer model prop asts = T.concat $ map (renderPropNode modelRenderer model prop) asts
 
 renderPropNode :: (Model -> AST -> Text) -> Model -> Property -> AST -> Text
 renderPropNode _ _ _ (Literal t) = t
