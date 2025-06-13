@@ -23,9 +23,10 @@ renderPropNode modelRenderer model prop (ModelValue t)
   | otherwise = modelRenderer model (ModelValue t)
 renderPropNode _ _ _ (UnknownTag _) = T.pack ""
 renderPropNode _ _ _ (PropLoop _ _) = T.pack ""
-renderPropNode _ _ prop (FuncCall fn arg)
+renderPropNode modelRenderer model prop (FuncCall fn arg)
   | arg == T.pack "prop.name" = applyFunc fn (propName prop)
   | arg == T.pack "prop.type" = applyFunc fn (propertyTypeToText (propType prop))
+  | arg == T.pack "model.className" = applyFunc fn (className model)
   | otherwise = T.pack ""
 renderPropNode modelRenderer model prop (IfBlock (k, v) trueBody mElse) =
   let val = case k of
