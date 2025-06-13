@@ -4,14 +4,14 @@ import Data.Text (Text)
 import qualified Data.Text as T
 import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
-import Data.Char (isUpper, isLower, toLower)
+import Data.Char (isUpper, isLower, toLower, isDigit)
 import Debug.Trace (trace)
 
 propertyTypeToText :: PropertyType -> Text
 propertyTypeToText = T.pack . show
 
 renderPropBlock :: (Model -> AST -> Text) -> Model -> Property -> [AST] -> Text
-renderPropBlock modelRenderer model prop asts = T.concat $ map (renderPropNode modelRenderer model prop) asts
+renderPropBlock modelRenderer model prop asts = T.unlines $ map (T.strip . renderPropNode modelRenderer model prop) asts
 
 renderPropNode :: (Model -> AST -> Text) -> Model -> Property -> AST -> Text
 renderPropNode _ _ _ (Literal t) = t
@@ -64,12 +64,15 @@ camelSplit = go . T.unpack
     go s@(x:xs)
       | isUpper x =
           let (uppers, rest) = span isUpper s
-              (lowers, rest') = span isLower rest
+              (lowers, rest') = span (\c -> isLower c || isDigit c) rest
               token = uppers ++ lowers
           in T.pack token : go rest'
       | isLower x =
-          let (chunk, rest) = span isLower s
+          let (chunk, rest) = span (\c -> isLower c || isDigit c) s
           in T.pack chunk : go rest
-      | otherwise =  -- Handle special characters like dots
-          let (special, rest) = span (\c -> not (isUpper c || isLower c)) s
-          in T.pack special : go rest 
+      | x == '-' =  -- Handle existing hyphens
+          let (rest, _) = span (== '-') s
+          in T.pack rest : go (dropWhile (== '-') s)
+      | otherwise =  -- Handle other special characters
+          let (special, rest) = span (\c -> not (isUpper c || isLower c || isDigit c)) s
+          in if null special then go rest else T.pack special : go rest 
