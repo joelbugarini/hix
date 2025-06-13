@@ -11,7 +11,9 @@ propertyTypeToText :: PropertyType -> Text
 propertyTypeToText = T.pack . show
 
 renderPropBlock :: (Model -> AST -> Text) -> Model -> Property -> [AST] -> Text
-renderPropBlock modelRenderer model prop asts = T.concat $ map (renderPropNode modelRenderer model prop) asts
+renderPropBlock modelRenderer model prop asts =
+  let rendered = [T.concat (map (renderPropNode modelRenderer model prop) asts)]
+  in T.intercalate (T.pack "\n") rendered
 
 renderPropNode :: (Model -> AST -> Text) -> Model -> Property -> AST -> Text
 renderPropNode _ _ _ (Literal t) = t
@@ -70,9 +72,7 @@ camelSplit = go . T.unpack
       | isLower x =
           let (chunk, rest) = span (\c -> isLower c || isDigit c) s
           in T.pack chunk : go rest
-      | x == '-' =  -- Handle existing hyphens
-          let (rest, _) = span (== '-') s
-          in T.pack rest : go (dropWhile (== '-') s)
+      | x == '-' = go (dropWhile (== '-') s) -- skip all consecutive hyphens
       | otherwise =  -- Handle other special characters
-          let (special, rest) = span (\c -> not (isUpper c || isLower c || isDigit c)) s
+          let (special, rest) = span (\c -> not (isUpper c || isLower c || isDigit c || c == '-')) s
           in if null special then go rest else T.pack special : go rest 

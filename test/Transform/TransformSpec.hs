@@ -69,6 +69,27 @@ spec = do
           Right ast -> renderAST ast model `shouldBe` T.unlines ["testModule", "TESTMODULE", "test_module"]
           Left err -> fail $ "Failed to parse template: " ++ err
 
+      it "renders multiline property blocks correctly in prop loops" $ do
+        let model = Model "TestModule" [Property "Id" IntType, Property "Name" StringType]
+        let template = T.unlines
+              [ "[[prop]]"
+              , "  <field>"
+              , "    [[prop.name]] : [[prop.type]]"
+              , "  </field>"
+              , "[[/prop]]"
+              ]
+        let expected = T.unlines
+              [ "  <field>"
+              , "    Id : int"
+              , "  </field>"
+              , "  <field>"
+              , "    Name : string"
+              , "  </field>"
+              ]
+        case parseTemplate template of
+          Right ast -> renderAST ast model `shouldBe` expected
+          Left err -> fail $ "Failed to parse template: " ++ err
+
     describe "Edge Cases" $ do
       it "handles empty strings" $ do
         applyFunc (T.pack "lowerFirst") (T.pack "") `shouldBe` T.pack ""
