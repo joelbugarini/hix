@@ -19,7 +19,10 @@ transformModuleName func moduleName
 
 -- Split a module path into parts and transform each part
 transformModulePath :: Text -> Text -> Text
-transformModulePath func path = T.intercalate "." $ map (transformModuleName func) $ T.split (== '.') path
+transformModulePath func path = 
+  let parts = T.split (== '.') path
+      transformedParts = map (transformModuleName func) parts
+  in T.intercalate "." transformedParts
 
 -- Validate if a module name is valid after transformation
 isValidModuleName :: Text -> Bool

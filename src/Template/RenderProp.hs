@@ -5,6 +5,7 @@ import qualified Data.Text as T
 import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
 import Data.Char (isUpper, isLower, toLower)
+import Debug.Trace (trace)
 
 propertyTypeToText :: PropertyType -> Text
 propertyTypeToText = T.pack . show
@@ -65,6 +66,9 @@ camelSplit = go . T.unpack
               (lowers, rest') = span isLower rest
               token = uppers ++ lowers
           in T.pack token : go rest'
-      | otherwise =
+      | isLower x =
           let (chunk, rest) = span isLower s
-          in T.pack chunk : go rest 
+          in T.pack chunk : go rest
+      | otherwise =  -- Handle special characters like dots
+          let (special, rest) = span (\c -> not (isUpper c || isLower c)) s
+          in T.pack special : go rest 

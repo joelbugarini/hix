@@ -77,6 +77,7 @@ test-suite hix-tests
     , WizardSpec
     , ParserSpec
     , ModuleTransformSpec
+    , Transform.TransformSpec
   hs-source-dirs:      test
   build-depends:
       base

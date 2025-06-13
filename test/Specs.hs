@@ -23,6 +23,7 @@ import WizardSpec (wizardSpec)
 import qualified ParserSpec
 import qualified ModuleTransformSpec
 import Template.Parser (parseTemplate)
+import Transform.TransformSpec
 
 helpMessage :: String
 helpMessage = init $ unlines
@@ -55,6 +56,7 @@ main = hspec $ do
   wizardSpec
   ParserSpec.spec
   ModuleTransformSpec.spec
+  Transform.TransformSpec.spec
 
   describe "Lexer" $ do
     it "tokenizes simple template (deprecated)" $
