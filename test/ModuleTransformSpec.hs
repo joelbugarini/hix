@@ -14,6 +14,9 @@ import System.IO (putStrLn, hFlush, stdout)
 import Control.Concurrent (threadDelay)
 import Control.Exception (evaluate)
 import Debug.Trace (trace)
+import Data.Text (Text)
+import Template.AST (AST(..))
+import Control.Monad.Writer (runWriter)
 
 spec :: Spec
 spec = do
@@ -74,5 +77,16 @@ spec = do
       let template = "[[module_transform kebab_case model.className]]-detail.component.ts"
       let model = Model "TestModule" []
       case parseTemplate (T.pack template) of
-        Right asts -> renderAST asts model `shouldBe` "test-module-detail.component.ts"
+        Right asts -> let (result, _) = runWriter $ renderAST asts model
+                      in result `shouldBe` "test-module-detail.component.ts"
         Left err -> fail $ "Failed to parse template: " ++ err 
+
+  describe "Module Transform" $ do
+    it "transforms module name correctly" $ do
+      let template = "[[module_transform kebab_case model.className]].component.ts"
+          model = Model "test-module" [Property "name" StringType]
+      case parseTemplate template of
+        Left err -> expectationFailure $ "Parse error: " ++ err
+        Right asts -> do
+          let (result, _) = runWriter $ renderAST asts model
+          result `shouldBe` "test-module.component.ts" 

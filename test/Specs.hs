@@ -12,6 +12,7 @@ import System.Directory (createDirectoryIfMissing, removeDirectoryRecursive, rem
 import System.IO.Silently (capture_)
 import System.Process (readProcess, readProcessWithExitCode)
 import System.Exit (ExitCode(ExitSuccess, ExitFailure))
+import Control.Monad.Writer (runWriter)
 
 import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
@@ -72,7 +73,7 @@ main = hspec $ do
             ]
       case parseTemplate "public class [[model.className]] {\n[[prop]][[prop.type]] [[prop.name]];\n[[/prop]]}" of
         Right ast -> do
-          let output = renderAST ast model
+          let (output, _) = runWriter $ renderAST ast model
           output `shouldBe` T.stripEnd "public class Thing {\nint Id;\nstring Title;\n}"
         Left err -> expectationFailure $ "Parse error: " ++ err
 
@@ -92,7 +93,7 @@ main = hspec $ do
             ]
       case parseTemplate template of
         Right ast -> do
-          let output = renderAST ast model
+          let (output, _) = runWriter $ renderAST ast model
               expected = T.stripEnd $ T.unlines
                 [ "Input: IsAdmin"
                 , "Input: Name"
@@ -110,7 +111,7 @@ main = hspec $ do
         Right model ->
           case parseTemplate template of
             Right ast ->
-              let output = renderAST ast model
+              let (output, _) = runWriter $ renderAST ast model
                in removeBlankLines output `shouldBe` removeBlankLines expected
             Left err -> expectationFailure $ "Parse error: " ++ err
         Left err -> expectationFailure $ "Failed to decode model: " ++ err
@@ -160,7 +161,7 @@ goldenTest name = it ("matches golden output for " ++ name) $ do
     Right model ->
       case parseTemplate template of
         Right ast ->
-          let output = renderAST ast model
+          let (output, _) = runWriter $ renderAST ast model
            in removeBlankLines output `shouldBe` removeBlankLines expected
         Left err -> expectationFailure $ "Parse error: " ++ err
     Left err -> expectationFailure $ "Failed to decode model: " ++ err

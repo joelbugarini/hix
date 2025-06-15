@@ -9,12 +9,13 @@ import Template.RenderNode (renderNode)
 import qualified Data.Text as T
 import System.IO (hPutStrLn, stderr)
 import Data.List (nub)
+import Control.Monad.Writer
 
 -- Entry point: render list of AST nodes with full model
-renderAST :: [AST] -> Model -> T.Text
-renderAST asts model =
-  let rendered = mconcat $ map (renderNode model) asts
-  in removeUntransformedTokens rendered
+renderAST :: [AST] -> Model -> Writer [Text] Text
+renderAST asts model = do
+  rendered <- mapM (renderNode model) asts
+  return $ removeUntransformedTokens (mconcat rendered)
 
 -- Remove any remaining [[...]] tokens from the output
 removeUntransformedTokens :: T.Text -> T.Text

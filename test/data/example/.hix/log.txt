@@ -1,0 +1,12 @@
+Rendering prop block for property: Name
+Rendering prop block for property: Age
+Rendering prop block for property: CreatedAt
+Rendering prop block for property: IsActive
+Rendering prop block for property: Score
+Rendering prop block for property: Rating
+Rendering prop block for property: Balance
+Rendering prop block for property: Description
+Rendering prop block for property: UserId
+Rendering prop block for property: BirthDate
+Rendering prop block for property: LoginTime
+Rendering prop block for property: ProfilePic
