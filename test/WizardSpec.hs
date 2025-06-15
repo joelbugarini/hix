@@ -66,11 +66,11 @@ wizardSpec = describe "Wizard Configuration" $ do
         -- Check for invalid characters in keys (not values)
         let hasInvalidKeys = any (\line -> 
               let trimmed = T.strip line
-              in not (T.null trimmed) && T.head trimmed /= '#' && -- Skip comments and empty lines
-                 not ("template:" `T.isInfixOf` line) && -- Skip template values
-                 not ("filename:" `T.isInfixOf` line) && -- Skip filename values
-                 not ("output_by:" `T.isInfixOf` line) && -- Skip output_by values
-                 not ("path:" `T.isInfixOf` line) && -- Skip path values
+              in not (T.null trimmed) && T.head trimmed /= '#' &&
+                 not ("template:" `T.isInfixOf` line) &&
+                 not ("filename:" `T.isInfixOf` line) &&
+                 not ("output_by:" `T.isInfixOf` line) &&
+                 not ("path:" `T.isInfixOf` line) &&
                  ("[" `T.isInfixOf` line || "]" `T.isInfixOf` line)) (T.lines configContent)
         hasInvalidKeys `shouldBe` False
         

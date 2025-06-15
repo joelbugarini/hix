@@ -58,10 +58,6 @@ main = hspec $ do
   ModuleTransformSpec.spec
   Transform.TransformSpec.spec
 
-  describe "Lexer" $ do
-    it "tokenizes simple template (deprecated)" $
-      pendingWith "Lexer is deprecated; see Template.Parser for new parsing logic."
-
   describe "TemplateAST" $ do
     it "parses prop loop with prop.name" $
       case parseTemplate "[[prop]]int [[prop.name]];[[/prop]]" of
