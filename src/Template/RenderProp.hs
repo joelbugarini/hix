@@ -6,29 +6,32 @@ import Template.AST (AST(..))
 import Model.Model (Model(..), Property(..), PropertyType(..))
 import Data.Char (isUpper, isLower, toLower, isDigit)
 import Debug.Trace (trace)
+import Logging (LogState, logInfo)
+import Control.Monad.Writer
 
 propertyTypeToText :: PropertyType -> Text
 propertyTypeToText = T.pack . show
 
-renderPropBlock :: (Model -> AST -> Text) -> Model -> Property -> [AST] -> Text
-renderPropBlock modelRenderer model prop asts =
-  let rendered = [T.concat (map (renderPropNode modelRenderer model prop) asts)]
-  in T.intercalate (T.pack "\n") rendered
+renderPropBlock :: (Model -> AST -> Writer [Text] Text) -> Model -> Property -> [AST] -> Writer [Text] Text
+renderPropBlock modelRenderer model prop asts = do
+  tell [T.pack $ "Rendering prop block for property: " ++ T.unpack (propName prop)]
+  rendered <- mapM (renderPropNode modelRenderer model prop) asts
+  return $ T.concat rendered
 
-renderPropNode :: (Model -> AST -> Text) -> Model -> Property -> AST -> Text
-renderPropNode _ _ _ (Literal t) = t
-renderPropNode _ _ prop (ModelValue t) | t == T.pack "prop.name" = propName prop
-renderPropNode _ _ prop (ModelValue t) | t == T.pack "prop.type" = propertyTypeToText (propType prop)
+renderPropNode :: (Model -> AST -> Writer [Text] Text) -> Model -> Property -> AST -> Writer [Text] Text
+renderPropNode _ _ _ (Literal t) = return t
+renderPropNode _ _ prop (ModelValue t) | t == T.pack "prop.name" = return $ propName prop
+renderPropNode _ _ prop (ModelValue t) | t == T.pack "prop.type" = return $ propertyTypeToText (propType prop)
 renderPropNode modelRenderer model prop (ModelValue t)
-  | t == T.pack "prop.name" = propName prop
-  | t == T.pack "prop.type" = propertyTypeToText (propType prop)
+  | t == T.pack "prop.name" = return $ propName prop
+  | t == T.pack "prop.type" = return $ propertyTypeToText (propType prop)
   | otherwise = modelRenderer model (ModelValue t)
-renderPropNode _ _ _ (UnknownTag _) = T.pack ""
-renderPropNode _ _ _ (PropLoop _ _) = T.pack ""
+renderPropNode _ _ _ (UnknownTag _) = return $ T.pack ""
+renderPropNode _ _ _ (PropLoop _ _) = return $ T.pack ""
 renderPropNode modelRenderer model prop (FuncCall fn arg)
-  | arg == T.pack "prop.name" = applyFunc fn (propName prop)
-  | arg == T.pack "prop.type" = applyFunc fn (propertyTypeToText (propType prop))
-  | arg == T.pack "model.className" = applyFunc fn (className model)
+  | arg == T.pack "prop.name" = return $ applyFunc fn (propName prop)
+  | arg == T.pack "prop.type" = return $ applyFunc fn (propertyTypeToText (propType prop))
+  | arg == T.pack "model.className" = return $ applyFunc fn (className model)
   | otherwise = modelRenderer model (FuncCall fn arg)
 renderPropNode modelRenderer model prop (IfBlock (k, v) trueBody mElse) =
   let val = case k of
@@ -36,8 +39,12 @@ renderPropNode modelRenderer model prop (IfBlock (k, v) trueBody mElse) =
               t | t == T.pack "prop.type" -> propertyTypeToText (propType prop)
               _ -> T.pack ""
   in if T.strip val == T.strip v
-     then T.concat $ map (renderPropNode modelRenderer model prop) trueBody
-     else maybe (T.pack "") (T.concat . map (renderPropNode modelRenderer model prop)) mElse
+     then do
+       rendered <- mapM (renderPropNode modelRenderer model prop) trueBody
+       return $ T.concat rendered
+     else maybe (return $ T.pack "") (\elseBody -> do
+       rendered <- mapM (renderPropNode modelRenderer model prop) elseBody
+       return $ T.concat rendered) mElse
 
 applyFunc :: Text -> Text -> Text
 applyFunc fn t

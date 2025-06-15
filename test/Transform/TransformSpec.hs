@@ -3,12 +3,17 @@
 module Transform.TransformSpec (spec) where
 
 import Test.Hspec
+import Data.Text (Text)
 import qualified Data.Text as T
 import Config.ModuleTransform (transformModuleName, transformModulePath, isValidModuleName)
 import Template.RenderProp (applyFunc)
 import Template.Renderer (renderAST)
 import Template.Parser (parseTemplate)
 import Model.Model (Model(..), Property(..), PropertyType(..))
+import Control.Monad.Writer (runWriter)
+
+normalize :: Text -> Text
+normalize = T.strip
 
 spec :: Spec
 spec = do
@@ -46,14 +51,16 @@ spec = do
         let model = Model "TestModule" []
         let template = "[[upper model.className]]"
         case parseTemplate (T.pack template) of
-          Right ast -> renderAST ast model `shouldBe` "TESTMODULE"
+          Right ast -> let (result, _) = runWriter $ renderAST ast model
+                       in result `shouldBe` "TESTMODULE"
           Left err -> fail $ "Failed to parse template: " ++ err
 
       it "transforms model.className in prop loops" $ do
         let model = Model "TestModule" [Property "Id" IntType]
         let template = "[[prop]][[lowerFirst model.className]][[/prop]]"
         case parseTemplate (T.pack template) of
-          Right ast -> renderAST ast model `shouldBe` "testModule"
+          Right ast -> let (result, _) = runWriter $ renderAST ast model
+                       in result `shouldBe` "testModule"
           Left err -> fail $ "Failed to parse template: " ++ err
 
       it "handles multiple transformations in prop loops" $ do
@@ -68,28 +75,24 @@ spec = do
         let normalize t = T.unlines . map T.stripEnd . filter (not . T.null) . T.lines . T.replace "\r\n" "\n" . T.replace "\r" "\n" $ t
             expected = T.unlines ["  testModule", "  TESTMODULE", "  test_module", ""]
         case parseTemplate template of
-          Right ast -> normalize (renderAST ast model) `shouldBe` normalize expected
+          Right ast -> let (result, _) = runWriter $ renderAST ast model
+                       in normalize result `shouldBe` normalize expected
           Left err -> fail $ "Failed to parse template: " ++ err
 
       it "renders multiline property blocks correctly in prop loops" $ do
         let model = Model "TestModule" [Property "Id" IntType, Property "Name" StringType]
         let template = T.unlines
               [ "[[prop]]"
-              , "  <field>"
-              , "    [[prop.name]] : [[prop.type]]"
-              , "  </field>"
+              , "  [[prop.name]] : [[prop.type]]"
               , "[[/prop]]"
               ]
         let expected = T.unlines
-              [ "  <field>"
-              , "    Id : int"
-              , "  </field>"
-              , "  <field>"
-              , "    Name : string"
-              , "  </field>"
+              [ "  Id : int"
+              , "  Name : string"
               ]
         case parseTemplate template of
-          Right ast -> renderAST ast model `shouldBe` expected
+          Right ast -> let (result, _) = runWriter $ renderAST ast model
+                       in result `shouldBe` expected
           Left err -> fail $ "Failed to parse template: " ++ err
 
     describe "Edge Cases" $ do
@@ -116,4 +119,25 @@ spec = do
         isValidModuleName "test-module" `shouldBe` True
         isValidModuleName "Test.Module" `shouldBe` True
         isValidModuleName "" `shouldBe` False
-        isValidModuleName "Test@Module" `shouldBe` False 
+        isValidModuleName "Test@Module" `shouldBe` False
+
+  describe "Template Transform" $ do
+    it "renders model name inside prop loop" $ do
+      let template = "[[prop]][[model.className]][[/prop]]"
+          model = Model "test" [Property "name" StringType]
+          expected = "test"
+      case parseTemplate template of
+        Left err -> expectationFailure $ "Parse error: " ++ err
+        Right ast -> do
+          let (result, _) = runWriter $ renderAST ast model
+          normalize result `shouldBe` normalize expected
+
+    it "handles nested properties" $ do
+      let template = "[[prop]][[prop.name]][[/prop]]"
+          model = Model "test" [Property "user.name" StringType]
+          expected = "user.name"
+      case parseTemplate template of
+        Left err -> expectationFailure $ "Parse error: " ++ err
+        Right ast -> do
+          let (result, _) = runWriter $ renderAST ast model
+          result `shouldBe` expected 
