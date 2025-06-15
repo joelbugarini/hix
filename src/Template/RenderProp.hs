@@ -29,7 +29,7 @@ renderPropNode modelRenderer model prop (FuncCall fn arg)
   | arg == T.pack "prop.name" = applyFunc fn (propName prop)
   | arg == T.pack "prop.type" = applyFunc fn (propertyTypeToText (propType prop))
   | arg == T.pack "model.className" = applyFunc fn (className model)
-  | otherwise = T.pack ""
+  | otherwise = modelRenderer model (FuncCall fn arg)
 renderPropNode modelRenderer model prop (IfBlock (k, v) trueBody mElse) =
   let val = case k of
               t | t == T.pack "prop.name" -> propName prop

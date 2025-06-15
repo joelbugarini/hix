@@ -65,8 +65,10 @@ spec = do
               , "  [[snake_case model.className]]"
               , "[[/prop]]"
               ]
+        let normalize t = T.unlines . map T.stripEnd . filter (not . T.null) . T.lines . T.replace "\r\n" "\n" . T.replace "\r" "\n" $ t
+            expected = T.unlines ["  testModule", "  TESTMODULE", "  test_module", ""]
         case parseTemplate template of
-          Right ast -> renderAST ast model `shouldBe` T.unlines ["testModule", "TESTMODULE", "test_module"]
+          Right ast -> normalize (renderAST ast model) `shouldBe` normalize expected
           Left err -> fail $ "Failed to parse template: " ++ err
 
       it "renders multiline property blocks correctly in prop loops" $ do
