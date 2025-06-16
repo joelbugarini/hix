@@ -29,6 +29,9 @@ library
     , Template.RenderNode
     , Template.RenderProp
     , Template.Renderer
+    , CLI.Command
+    , CLI.Runner
+    , CLI.Generate
   hs-source-dirs:      src
   build-depends:
       base ^>=4.19.2.0
