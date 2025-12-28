@@ -27,6 +27,9 @@ dist-newstyle/
 utils/installer/output/
 *.iss.bak
 
+# RPM packaging build directory
+utils/packaging/rpmbuild/
+
 # MacOS / Windows / Linux cruft
 .DS_Store
 Thumbs.db
