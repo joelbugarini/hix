@@ -4,6 +4,7 @@ mod matcher;
 mod pack;
 mod pack_loader;
 mod parser;
+mod report;
 mod scanner;
 
 use anyhow::{Context, Result};
@@ -12,6 +13,7 @@ use extractor::Extractor;
 use matcher::PatternMatcher;
 use pack_loader::PackLoader;
 use parser::{ParseResult, ParserRegistry, ParseSummary};
+use report::ReportGenerator;
 use scanner::Scanner;
 use std::collections::HashMap;
 use std::fs;
@@ -199,7 +201,13 @@ fn run() -> Result<()> {
                         if parse_result.tree.is_some() {
                             parse_results.insert(file.path.clone(), parse_result);
                         }
+                    } else {
+                        parse_summary.total_files += 1;
+                        parse_summary.no_parser += 1;
                     }
+                } else {
+                    parse_summary.total_files += 1;
+                    parse_summary.no_parser += 1;
                 }
             }
 
@@ -272,6 +280,32 @@ fn run() -> Result<()> {
                                     .with_context(|| format!("Failed to write matches.json to {:?}", matches_path))?;
                                 
                                 println!("\nMatches written to: {:?}", matches_path);
+
+                                // Generate report
+                                let report_generator = ReportGenerator::new();
+                                let report = report_generator.generate_report(
+                                    &facts,
+                                    &match_results,
+                                    &loaded_packs,
+                                    &parse_summary,
+                                );
+
+                                // Write report.json
+                                let report_json_path = repo_path.join(".hixdrill").join("report.json");
+                                let report_json = serde_json::to_string_pretty(&report)
+                                    .with_context(|| "Failed to serialize report to JSON")?;
+                                
+                                fs::write(&report_json_path, report_json)
+                                    .with_context(|| format!("Failed to write report.json to {:?}", report_json_path))?;
+
+                                // Write report.md
+                                let report_md = report_generator.generate_markdown(&report);
+                                let report_md_path = repo_path.join(".hixdrill").join("report.md");
+                                fs::write(&report_md_path, report_md)
+                                    .with_context(|| format!("Failed to write report.md to {:?}", report_md_path))?;
+
+                                println!("Report written to: {:?}", report_json_path);
+                                println!("Markdown report written to: {:?}", report_md_path);
                             }
                             Err(e) => {
                                 eprintln!("Warning: Pattern matching failed: {}", e);
