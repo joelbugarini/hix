@@ -393,6 +393,14 @@ impl Extractor {
                     if let Some(name_node) = child.child_by_field_name("name") {
                         let name = name_node.utf8_text(content.as_bytes()).unwrap_or("").to_string();
 
+                        // Check if this is __init__ - if so, extract field assignments from it
+                        if name == "__init__" {
+                            // Extract field assignments from __init__ body
+                            if let Some(init_body) = child.child_by_field_name("body") {
+                                self.extract_python_init_fields(init_body, symbol_id, content, facts);
+                            }
+                        }
+
                         facts.members.push(Member {
                             symbol_id: symbol_id.to_string(),
                             name,
@@ -414,6 +422,45 @@ impl Extractor {
                                 type_ref: None,
                                 range: self.node_to_range(&name_node),
                             });
+                        }
+                    }
+                }
+                _ => {}
+            }
+        }
+    }
+
+    fn extract_python_init_fields(
+        &self,
+        body_node: Node,
+        symbol_id: &str,
+        content: &str,
+        facts: &mut Facts,
+    ) {
+        let mut cursor = body_node.walk();
+        for child in body_node.children(&mut cursor) {
+            match child.kind() {
+                "expression_statement" => {
+                    // Look for assignments like self.name = ...
+                    if let Some(assignment) = child.child(0) {
+                        if assignment.kind() == "assignment" {
+                            if let Some(left) = assignment.child_by_field_name("left") {
+                                // Check if it's an attribute (self.attr)
+                                if left.kind() == "attribute" {
+                                    if let Some(attr_name) = left.child_by_field_name("attribute") {
+                                        let field_name = attr_name.utf8_text(content.as_bytes()).unwrap_or("").to_string();
+                                        if !field_name.is_empty() {
+                                            facts.members.push(Member {
+                                                symbol_id: symbol_id.to_string(),
+                                                name: field_name,
+                                                kind: MemberKind::Field,
+                                                type_ref: None,
+                                                range: self.node_to_range(&attr_name),
+                                            });
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }

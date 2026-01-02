@@ -1,5 +1,6 @@
 mod extractor;
 mod facts;
+mod matcher;
 mod pack;
 mod pack_loader;
 mod parser;
@@ -8,6 +9,7 @@ mod scanner;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use extractor::Extractor;
+use matcher::PatternMatcher;
 use pack_loader::PackLoader;
 use parser::{ParseResult, ParserRegistry, ParseSummary};
 use scanner::Scanner;
@@ -165,7 +167,48 @@ fn run() -> Result<()> {
                 anyhow::bail!("Path is not a directory: {}", path);
             }
 
-            // Load pattern packs if provided
+            // First, scan and extract facts (reuse scan logic)
+            let scanner = Scanner::new(repo_path);
+            let files = scanner.scan(repo_path)
+                .with_context(|| format!("Failed to scan repository: {}", path))?;
+
+            // Parse files
+            let parser_registry = ParserRegistry::new();
+            let mut parse_summary = ParseSummary::new();
+            let mut parse_results: HashMap<String, ParseResult> = HashMap::new();
+            let mut file_contents: HashMap<String, String> = HashMap::new();
+
+            for file in &files {
+                if let Some(lang) = &file.language {
+                    let has_parser = matches!(lang.as_str(), "typescript" | "tsx" | "python" | "csharp" | "html");
+                    if has_parser {
+                        let content = match fs::read_to_string(&file.path) {
+                            Ok(c) => c,
+                            Err(e) => {
+                                eprintln!("Warning: Failed to read {}: {}", file.path, e);
+                                parse_summary.total_files += 1;
+                                parse_summary.failed += 1;
+                                continue;
+                            }
+                        };
+
+                        file_contents.insert(file.path.clone(), content.clone());
+                        let parse_result = parser_registry.parse(&content, lang);
+                        parse_summary.add_result(&parse_result);
+                        
+                        if parse_result.tree.is_some() {
+                            parse_results.insert(file.path.clone(), parse_result);
+                        }
+                    }
+                }
+            }
+
+            // Extract facts
+            let extractor = Extractor::new();
+            let mut facts = extractor.extract_facts(&files, &parse_results, &file_contents);
+            facts.sort();
+            
+            // Load and match patterns if packs are provided
             if let Some(packs_path) = packs {
                 let packs_dir = Path::new(&packs_path);
                 let loader = PackLoader::new();
@@ -182,7 +225,57 @@ fn run() -> Result<()> {
                                 println!("    {}", desc);
                             }
                             println!("    Patterns: {}", loaded_pack.pack.patterns.len());
-                            println!("    Path: {:?}", loaded_pack.path);
+                        }
+
+                        // Collect all pattern rules
+                        let mut all_rules = Vec::new();
+                        for loaded_pack in &loaded_packs {
+                            all_rules.extend(loaded_pack.pack.patterns.clone());
+                        }
+
+                        // Match patterns against facts
+                        let matcher = PatternMatcher::new();
+                        match matcher.match_patterns(&facts, &all_rules) {
+                            Ok(match_results) => {
+                                println!("\nPattern Matching Results:");
+                                println!("  Total matches: {}", match_results.instances.len());
+                                
+                                // Group by pattern name
+                                let mut by_pattern: HashMap<String, Vec<&matcher::MatchInstance>> = HashMap::new();
+                                for instance in &match_results.instances {
+                                    by_pattern
+                                        .entry(instance.pattern_name.clone())
+                                        .or_insert_with(Vec::new)
+                                        .push(instance);
+                                }
+
+                                for (pattern_name, instances) in &mut by_pattern {
+                                    instances.sort_by(|a, b| a.symbol_name.cmp(&b.symbol_name));
+                                    println!("  {}: {} matches", pattern_name, instances.len());
+                                    for instance in instances.iter().take(5) {
+                                        println!("    - {} ({})", instance.symbol_name, instance.file);
+                                    }
+                                    if instances.len() > 5 {
+                                        println!("    ... and {} more", instances.len() - 5);
+                                    }
+                                }
+
+                                // Write matches.json
+                                let matches_path = repo_path.join(".hixdrill").join("matches.json");
+                                fs::create_dir_all(matches_path.parent().unwrap())
+                                    .with_context(|| "Failed to create .hixdrill directory")?;
+                                
+                                let matches_json = serde_json::to_string_pretty(&match_results)
+                                    .with_context(|| "Failed to serialize matches to JSON")?;
+                                
+                                fs::write(&matches_path, matches_json)
+                                    .with_context(|| format!("Failed to write matches.json to {:?}", matches_path))?;
+                                
+                                println!("\nMatches written to: {:?}", matches_path);
+                            }
+                            Err(e) => {
+                                eprintln!("Warning: Pattern matching failed: {}", e);
+                            }
                         }
                     }
                     Err(e) => {
@@ -193,8 +286,7 @@ fn run() -> Result<()> {
                 println!("No pattern packs specified. Use --packs <folder> to load packs.");
             }
 
-            // TODO: In Story 6, we'll match patterns against facts
-            println!("\nAnalysis complete (pattern matching will be implemented in Story 6)");
+            println!("\nAnalysis complete");
         }
         None => {
             // No command provided, show help
