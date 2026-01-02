@@ -1,0 +1,454 @@
+{
+  "files": [
+    {
+      "path": "/home/joelbugarini/workspace/hix/CHANGELOG.md",
+      "language": "markdown",
+      "hash": "96d58e0c14d2eff5664e4020f63c66f09629eea7db73f118d4ee4dbda4d1c45c"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/Person.cs",
+      "language": "csharp",
+      "hash": "43fbbbb0097452ae103bfa18bb9e34a7b0190ee71467a7a564c3b9855c08e0ec"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/Person.json",
+      "language": "json",
+      "hash": "62f614e33df92751f0724be42e0c145f893293224a3a9769a0de2b6f8eba51a5"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/README.md",
+      "language": "markdown",
+      "hash": "f69e1719af8cf2c9f0a2588bba28123c3403f1e53d968fbf04b4111801f58e61"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/Setup.hs",
+      "language": "haskell",
+      "hash": "5066653559d4d6134b022d66a634a17fdcf8db35d28b447e581fec284afa4689"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/app/Main.hs",
+      "language": "haskell",
+      "hash": "94ca153a641621da508d7e5b8d3462309cf5e473586f8624e10012c5f718b2d6"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/advanced.md",
+      "language": "markdown",
+      "hash": "efa18c562250920a2a2a63fc500fa75424219ab67761671b6e84fe2377b2925a"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/bug-report-template.md",
+      "language": "markdown",
+      "hash": "b107718136f9b3d0dcfaafd58dd9df254beeb840e3d3e02c3889aa6423f71553"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/cli.md",
+      "language": "markdown",
+      "hash": "6eb14d2a22bbe11052f245c468df955ffd80c8d7cf06ee6a58681ee33ef08469"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/development.md",
+      "language": "markdown",
+      "hash": "f2475bf9d45e400e0288b41f5521b598c379957e4853bde4664efc2ae786110a"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/examples/config.yaml",
+      "language": "yaml",
+      "hash": "5db6ab801948ba0d20d39cfe943953561d60c0401f9d4cb0d3d8520a6dd6fdba"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/feature-checklist.md",
+      "language": "markdown",
+      "hash": "3b95b3c0e3cb10c10707ac4a992d2f2b529782630c6c22c9c4af4015437b34d3"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/features/_current.md",
+      "language": "markdown",
+      "hash": "bbb5ed2d269ebc3aefcc518ae2a82fe067625bf0a55c4acad9875c38cb4045cd"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/features/bugfix_0.3.0.1.md",
+      "language": "markdown",
+      "hash": "32cf52312f147fcf05003fee5cf6a43eb9d047be6c32e92189e3825265b2cd42"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/features/feat_0.3.0.0.md",
+      "language": "markdown",
+      "hash": "3400b9d75fa78b3e790425c81ca4ab29819f84ce50d37e23df7fa77c28f7e688"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/features/feat_0.3.1.0.md",
+      "language": "markdown",
+      "hash": "13941c81dc67b8f97c3a6b5eb361e4b4b3abb8f9fa0e3ee0e2f7a9551db67c73"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/features/feat_0.3.3.0.md",
+      "language": "markdown",
+      "hash": "67ef50f6360e2675651e39985f10dfbd4a679a7e20bd4291bc694113eaf970e3"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/features/feat_0.3.4.0.md",
+      "language": "markdown",
+      "hash": "1809f0593c3f76640c53a431e4fbf5e55d411bbc9432c544ecada943ea93e5c6"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/features/version_0.3.1.0.md",
+      "language": "markdown",
+      "hash": "eb6dce17c7365780404397fc059d002fd9ff9103cea15e87f180f8a92f3c81db"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/getting-started.md",
+      "language": "markdown",
+      "hash": "40f1ad6a6687b47958edd35aac9c68147738e42b31f95f045b4125e3f039d256"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/git-conventions.md",
+      "language": "markdown",
+      "hash": "03ac89aee58d664c8937712ff024ef05670ea851b574d9451c46a40851a33ce9"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/grammar.md",
+      "language": "markdown",
+      "hash": "f97ecfaa565761b9d7cef9a8b7fdad21e54060791e47ed8f08db3c3948c14136"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/index.md",
+      "language": "markdown",
+      "hash": "113ee7eede16bffea7a034b9bdd6a3359bfda071bccb53f05173aa81aa1fc149"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/issues/issue_model_classname_in_prop_loop.md",
+      "language": "markdown",
+      "hash": "e1d572f741b43069de3c694f60dd11f926beb1475e42dba5f02ccd719823bcc0"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/missing-link.md",
+      "language": "markdown",
+      "hash": "6cbf1e8eac5768409f9fd1478983a08653b433849c300c2469e96412e4ff2e5f"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/real-world-usecase.md",
+      "language": "markdown",
+      "hash": "3f262898a2611f50f8bcf088fa0edc24acc131bfa630104e44a8c8c2f3b4922b"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/roadmap.md",
+      "language": "markdown",
+      "hash": "e7e5d593723a8c2b2e1c2e4eb3097f856426614d8de7d6ebc1b1bd4a786dca63"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/specification.md",
+      "language": "markdown",
+      "hash": "d4afb8b0fae109fd3b9aab52402ec3f63ec5474bfb542b0e77479ab5a405d818"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/templates.md",
+      "language": "markdown",
+      "hash": "92c1bf3077f73efdbca892593317f839f955c43c0edcd248bcfa91182590f603"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/usage.md",
+      "language": "markdown",
+      "hash": "9943a2d6a808777a59ea285a26246774bf949ebe16c3901435da0dc8537b005b"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/versions/0.3.0.0.md",
+      "language": "markdown",
+      "hash": "e2f76843b6d02dce13e9532b2e391fc53967c648b4367ed48acb788036750e0d"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/versions/0.3.0.1.md",
+      "language": "markdown",
+      "hash": "9047b1fb45e4f85e963052efed8626601e78dd62d8b6ebf64614bd272b9dc7d4"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/versions/0.3.0.2.md",
+      "language": "markdown",
+      "hash": "aff0994e47d105ad9c7778b24fc34e66d8e74ad663a221949c0e318c8a7aaa16"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/docs/versions/0.3.5.0.md",
+      "language": "markdown",
+      "hash": "03ff7e92a423218d33ba5e94c5855f24939e6daa2f169049e56b4a0897be4889"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/drill/Cargo.toml",
+      "language": "toml",
+      "hash": "bea2af0ff9df2f1f400b81368ce61100ccfc608c1e53c89421c0ab6753eb32ce"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/drill/README.md",
+      "language": "markdown",
+      "hash": "477632d9b0c4a7f33c168c84d2c5a625faa1e273126df5696f9f2fcfe2ce1d82"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/drill/src/main.rs",
+      "language": "rust",
+      "hash": "6fa52028ce35f6d147aff5bf5e85234c8c5d7e862046ad86fb246781312da4ec"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/drill/src/scanner.rs",
+      "language": "rust",
+      "hash": "cff54de1c0a954239b651c3ee8211f7235d496561aa86beae3691a806ff0767a"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/generate-grammar.json",
+      "language": "json",
+      "hash": "676a24282c3865011a4d7bff36ae0fd1eabfced2d43138f5714bce584ffab538"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/hix.config.sample.yaml",
+      "language": "yaml",
+      "hash": "84d4eef49d822c6692fae600b4b93844ee3229f27323d9b3110123a2bf41bea0"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/hix.config.yaml",
+      "language": "yaml",
+      "hash": "facf396b87cbf3720cf512fd473d6b29d1761b51281acd85ed20070f89cca675"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/mkdocs.yml",
+      "language": "yaml",
+      "hash": "cc08623d005c60aabe88daa27d7a3fb576801c8ba33c436530583c740678bbd7"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/notes.md",
+      "language": "markdown",
+      "hash": "228d0be95ae4338a126b2d91afd6fc087d2d9f74b081c4d648f76cf1dff64a56"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/setup.md",
+      "language": "markdown",
+      "hash": "9c61a99d8f1c84ecd2d5e7c3efb6a6b68a4515901987e7cd7f3bf12ca8655099"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/CLI/Command.hs",
+      "language": "haskell",
+      "hash": "93e51ea8dca7882d74935b432f1737aff16f64f4bbbedf76b92726a77c24b3b8"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/CLI/Generate.hs",
+      "language": "haskell",
+      "hash": "304451552ff222f04c12e0a58335668a3d7ff00ca4edb2c2b0d06479b4adb35e"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/CLI/Help.hs",
+      "language": "haskell",
+      "hash": "3d36fe3fa8672c7000172fcdd84eacd5483e8bfaf77d6795be9020e1f94472b9"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/CLI/Runner.hs",
+      "language": "haskell",
+      "hash": "e06dc0e172a2e9a0dfa4ca1b72008f2424e850da19ac14820fec0bfb0eb65a4a"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/CLI/Wizard.hs",
+      "language": "haskell",
+      "hash": "54b6af0630bb2aa51caef722adc3c51864da22cc4a643c2cd412656e54e5a8e8"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Config/Config.hs",
+      "language": "haskell",
+      "hash": "f5f2ba3da27fc269cabe5f97e12e37c530bbab66602a2d3e329e60b726958f83"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Config/ModuleTransform.hs",
+      "language": "haskell",
+      "hash": "3234161095db9a6eb36780181c3be4e154e611571ba66b76f305dbe4963679b0"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Grammar/GrammarGen.hs",
+      "language": "haskell",
+      "hash": "e6ed68219d5dabe7d79f5f1abbab57959a583c0d3396700e32cae7e618ec54d2"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Logging.hs",
+      "language": "haskell",
+      "hash": "a1a8b65ec7bd9cd129ef2cdb497268a4b3fd7f023cbfa67b5fc3f987b8f545cc"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Model/Model.hs",
+      "language": "haskell",
+      "hash": "9d6e34fdbed9f2a9a1fa7d61b5e18109d07143efb08a77d5f56c0737e3559beb"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Template/AST.hs",
+      "language": "haskell",
+      "hash": "62dac3149786bc1782e9c866bbb5040be7d6dadcf7789c07e5ed40efd021986e"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Template/Lexer.hs",
+      "language": "haskell",
+      "hash": "94f96537e729e86a99ded83a94e04f8f8a89cc88478e895f92af3cb9d3890067"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Template/Parser.hs",
+      "language": "haskell",
+      "hash": "98f1c01ee0153e54aba3f97a913924ceb0d8a7cd51ec803056f79cb7f941707d"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Template/RenderNode.hs",
+      "language": "haskell",
+      "hash": "05e88001797241b69779ebff4e53ec6ccd8f8fef392b8b6a5628e248a3d1e843"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Template/RenderProp.hs",
+      "language": "haskell",
+      "hash": "717eb50c9124a7fe0f1bc00c272f9600e8d32ce039774cb002182a400961f94e"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/src/Template/Renderer.hs",
+      "language": "haskell",
+      "hash": "5f8a40f41acbcce32e2bf1ca9143335fa3c7a243fc7553daa1330cba11d568ea"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/stack.yaml",
+      "language": "yaml",
+      "hash": "559b92bb29b09bf07fb7273b49af3469239d39bc91fc40eb8390112df35f0179"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/GenerateSpec.hs",
+      "language": "haskell",
+      "hash": "de53bf4875ef72ebc297da518800ec2ad734e3396a3aa3e3ea2ceeb1d0b91f9a"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/HelpSpec.hs",
+      "language": "haskell",
+      "hash": "7270e5de477c14b91ebbb929ff78cad15dd9d8c19c3d419a1d42a777e30b5dd0"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/ModelSpec.hs",
+      "language": "haskell",
+      "hash": "a9658887c2111f7ed3e91a793e4e7c5b403fdde4acddcfdd54d36700d440cd0e"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/ModuleTransformSpec.hs",
+      "language": "haskell",
+      "hash": "bf528638f2387841b110b75148ec4670beced51b6f6372139f409f9c851ec694"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/ParserSpec.hs",
+      "language": "haskell",
+      "hash": "1b6e5ef560a41016dc5d9cb90032255fa7b541ea44ea0f90f1589dbb30dd2e2b"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/Specs.hs",
+      "language": "haskell",
+      "hash": "eedaa1905b9ae2e3b0c00b81c0a133ea8de78b29259facc38157e89605ba87ec"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/Template/ModuleTransformFilenameTest.hs",
+      "language": "haskell",
+      "hash": "765b227402883982af6039a96903c165cdd789f094dd7ac4df80c4b792370cea"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/Template/ModuleTransformQuickTest.hs",
+      "language": "haskell",
+      "hash": "045af82ceb1a37cb4ceaba3228ee5a97f5e7c2ccdca5fd355766220a5020ddf4"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/Template/RenderNodeTest.hs",
+      "language": "haskell",
+      "hash": "56e8569cc744fa17ae7d4317cc500aa1b65c73841ca52def9a7937c4a35bafb6"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/TemplateSpec.hs",
+      "language": "haskell",
+      "hash": "7c2508f2919e0b5726d1c2ecaa7d0292055101da61d0b13eae6ca5ffe23ea447"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/Transform/TransformSpec.hs",
+      "language": "haskell",
+      "hash": "dcce88ff219960b78daa8af812fabd6d91e7706de2b66face376cb35bd527db3"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/WizardSpec.hs",
+      "language": "haskell",
+      "hash": "0610dafcf359ec5e5c7dab0511b3d0b4fb2b37d10dea4ac9f6e85d27cd346f88"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/cli/config.yaml",
+      "language": "yaml",
+      "hash": "23bb392565b06a650d3da605ff186406ea854de7dcf0b32f228d7bcdab874cfd"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/cli/expected.txt",
+      "language": "text",
+      "hash": "769062b0a116a790356513882e6875b316a6fce04991cbf06a1a5d56f9b01b57"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/cli/model.json",
+      "language": "json",
+      "hash": "20920c00330808124d351297154033b92f8ec6d31f6ed78df6352f9dcb08335a"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/example/.hix/log.txt",
+      "language": "text",
+      "hash": "4394a3504fe0cb93495d6b67ad5c01de30a51241c72f9809f5f8e1aed70c0a1b"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/example/expected.txt",
+      "language": "text",
+      "hash": "a539e8b6f40b5f365d65d1553027aa0add05ec7bccc708f3e2be44823287c8d9"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/example/model.json",
+      "language": "json",
+      "hash": "ecb3f7c3040071b033440fa3c1c4aac2f56b70696c8c6483bcdcdc2c7359583a"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/form/expected.txt",
+      "language": "text",
+      "hash": "36e9f8f997729d9bb97cd2b9534c37b4dd3d6b506c1f608974bdb8f4b691db59"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/form/model.json",
+      "language": "json",
+      "hash": "c0f3b704acf54dbd0c7e0128517b29f556bcab66bbd751026c692d4e12545ce9"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/functions/expected.txt",
+      "language": "text",
+      "hash": "3a66505beb31a6e2d4e108f2f84d2dca744b0b80a6afa4bb068fc71b69b06546"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/functions/model.json",
+      "language": "json",
+      "hash": "627764822cbc3eb49df67519cd7105b061c0ce4eb2f2882f92e2ba88e268362f"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/ifelse/expected.txt",
+      "language": "text",
+      "hash": "c450ac94e3eab2fb2782ed690d9085ab00d8c4b7bedcfb1b9c1709817014b5af"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test/data/ifelse/model.json",
+      "language": "json",
+      "hash": "ea77354fcbf1000e076df7c3bbe259ddc54eba2ad229380c3c8f5ab22ac90999"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/test_output.txt",
+      "language": "text",
+      "hash": "887e98357019bedcd5a8f6f183fa9b4b0f251de90c58369d0bdf868b0c6e3b02"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/utils/packaging/README.md",
+      "language": "markdown",
+      "hash": "932110c8dfc55ccc480db425a8562bed02020366a5d4d64bed1aebbc1422a356"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/utils/packaging/build-rpm.sh",
+      "language": "shell",
+      "hash": "2926681ccd357f5c2e4abe436558a3643fe4ee445ff62db91cb0660078c285ee"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/utils/syntaxes/README.md",
+      "language": "markdown",
+      "hash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/utils/syntaxes/package.json",
+      "language": "json",
+      "hash": "e1bcd3e7f45892b4e97c6f788e87fe60a3ff1bd60f462dfe0a4c88b47fcf6951"
+    }
+  ]
+}

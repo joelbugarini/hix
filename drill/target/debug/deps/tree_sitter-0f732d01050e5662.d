@@ -1,0 +1,13 @@
+/home/joelbugarini/workspace/hix/drill/target/debug/deps/tree_sitter-0f732d01050e5662.d: /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/lib.rs /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/ffi.rs /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/util.rs /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/./README.md /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/./bindings.rs /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/../src/parser.h /home/joelbugarini/workspace/hix/drill/target/debug/build/tree-sitter-7c18dc9590dc6aee/out/stdlib-symbols.txt
+
+/home/joelbugarini/workspace/hix/drill/target/debug/deps/libtree_sitter-0f732d01050e5662.rmeta: /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/lib.rs /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/ffi.rs /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/util.rs /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/./README.md /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/./bindings.rs /home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/../src/parser.h /home/joelbugarini/workspace/hix/drill/target/debug/build/tree-sitter-7c18dc9590dc6aee/out/stdlib-symbols.txt
+
+/home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/lib.rs:
+/home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/ffi.rs:
+/home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/util.rs:
+/home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/./README.md:
+/home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/./bindings.rs:
+/home/joelbugarini/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tree-sitter-0.21.0/binding_rust/../src/parser.h:
+/home/joelbugarini/workspace/hix/drill/target/debug/build/tree-sitter-7c18dc9590dc6aee/out/stdlib-symbols.txt:
+
+# env-dep:OUT_DIR=/home/joelbugarini/workspace/hix/drill/target/debug/build/tree-sitter-7c18dc9590dc6aee/out
