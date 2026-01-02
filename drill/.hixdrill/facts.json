@@ -1,0 +1,166 @@
+{
+  "files": [
+    {
+      "path": "./Cargo.toml",
+      "language": "toml",
+      "hash": "87baf33932698591859412444dae16d37cbcdcc46ff8ed85963c11dc25e31fd5"
+    },
+    {
+      "path": "./README.md",
+      "language": "markdown",
+      "hash": "477632d9b0c4a7f33c168c84d2c5a625faa1e273126df5696f9f2fcfe2ce1d82"
+    },
+    {
+      "path": "./src/extractor.rs",
+      "language": "rust",
+      "hash": "ec037d499d2a4aade21edf73c2f17e2c098b9b56c7cda6bdbe4d1531bc23a6d1"
+    },
+    {
+      "path": "./src/facts.rs",
+      "language": "rust",
+      "hash": "9c4c175868b75350983a9d75f6cbff82a79010616d35ccdba3e347b5f2e5b7cd"
+    },
+    {
+      "path": "./src/main.rs",
+      "language": "rust",
+      "hash": "6cd3c2dcf2fa218cdd688054f9821493cf79ee079004ac0d52b8a3f9f760c446"
+    },
+    {
+      "path": "./src/parser.rs",
+      "language": "rust",
+      "hash": "7c1b61445a673696d45e10087cc60e39bbdc5db7ed3e71b4b545d0e19b3227de"
+    },
+    {
+      "path": "./src/scanner.rs",
+      "language": "rust",
+      "hash": "cff54de1c0a954239b651c3ee8211f7235d496561aa86beae3691a806ff0767a"
+    },
+    {
+      "path": "./test_verification.ts",
+      "language": "typescript",
+      "hash": "187771d65a8b5b4db37bff8dbc244c046ebbd2b3f5805d2b0bb5881e427d57ad"
+    }
+  ],
+  "symbols": [
+    {
+      "id": "sym_0",
+      "kind": "type",
+      "name": "Person",
+      "file": "./test_verification.ts",
+      "range": {
+        "start_line": 1,
+        "start_column": 6,
+        "end_line": 1,
+        "end_column": 12
+      }
+    },
+    {
+      "id": "sym_1",
+      "kind": "type",
+      "name": "Animal",
+      "file": "./test_verification.ts",
+      "range": {
+        "start_line": 15,
+        "start_column": 10,
+        "end_line": 15,
+        "end_column": 16
+      }
+    },
+    {
+      "id": "sym_2",
+      "kind": "type",
+      "name": "Dog",
+      "file": "./test_verification.ts",
+      "range": {
+        "start_line": 20,
+        "start_column": 6,
+        "end_line": 20,
+        "end_column": 9
+      }
+    },
+    {
+      "id": "sym_3",
+      "kind": "function",
+      "name": "calculateSum",
+      "file": "./test_verification.ts",
+      "range": {
+        "start_line": 28,
+        "start_column": 9,
+        "end_line": 28,
+        "end_column": 21
+      }
+    },
+    {
+      "id": "sym_4",
+      "kind": "variable",
+      "name": "PI",
+      "file": "./test_verification.ts",
+      "range": {
+        "start_line": 32,
+        "start_column": 6,
+        "end_line": 32,
+        "end_column": 8
+      }
+    }
+  ],
+  "members": [
+    {
+      "symbol_id": "sym_0",
+      "name": "constructor",
+      "kind": "method",
+      "range": {
+        "start_line": 5,
+        "start_column": 4,
+        "end_line": 5,
+        "end_column": 15
+      }
+    },
+    {
+      "symbol_id": "sym_0",
+      "name": "greet",
+      "kind": "method",
+      "range": {
+        "start_line": 10,
+        "start_column": 4,
+        "end_line": 10,
+        "end_column": 9
+      }
+    },
+    {
+      "symbol_id": "sym_1",
+      "name": "makeSound",
+      "kind": "method",
+      "range": {
+        "start_line": 17,
+        "start_column": 4,
+        "end_line": 17,
+        "end_column": 13
+      }
+    },
+    {
+      "symbol_id": "sym_1",
+      "name": "species",
+      "kind": "property",
+      "type_ref": ": string",
+      "range": {
+        "start_line": 16,
+        "start_column": 4,
+        "end_line": 16,
+        "end_column": 11
+      }
+    },
+    {
+      "symbol_id": "sym_2",
+      "name": "makeSound",
+      "kind": "method",
+      "range": {
+        "start_line": 23,
+        "start_column": 4,
+        "end_line": 23,
+        "end_column": 13
+      }
+    }
+  ],
+  "relations": [],
+  "annotations": []
+}

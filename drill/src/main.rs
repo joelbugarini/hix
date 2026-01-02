@@ -1,10 +1,14 @@
-mod scanner;
+mod extractor;
+mod facts;
 mod parser;
+mod scanner;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
-use parser::{ParserRegistry, ParseSummary};
+use extractor::Extractor;
+use parser::{ParseResult, ParserRegistry, ParseSummary};
 use scanner::Scanner;
+use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
 
@@ -55,6 +59,8 @@ fn run() -> Result<()> {
             // Parse files
             let parser_registry = ParserRegistry::new();
             let mut parse_summary = ParseSummary::new();
+            let mut parse_results: HashMap<String, ParseResult> = HashMap::new();
+            let mut file_contents: HashMap<String, String> = HashMap::new();
 
             println!("Scanned {} files", files.len());
             for file in &files {
@@ -74,16 +80,24 @@ fn run() -> Result<()> {
                             }
                         };
 
+                        // Store content for facts extraction
+                        file_contents.insert(file.path.clone(), content.clone());
+
                         let parse_result = parser_registry.parse(&content, lang);
                         parse_summary.add_result(&parse_result);
 
                         let status = match &parse_result {
-                            parser::ParseResult { tree: Some(_), error: None } => "✓",
-                            parser::ParseResult { tree: Some(_), error: Some(_) } => "⚠",
-                            parser::ParseResult { tree: None, error: Some(_) } => "✗",
+                            ParseResult { tree: Some(_), error: None } => "✓",
+                            ParseResult { tree: Some(_), error: Some(_) } => "⚠",
+                            ParseResult { tree: None, error: Some(_) } => "✗",
                             _ => "○",
                         };
                         println!("  {} {} [{}]", status, file.path, lang);
+                        
+                        // Store parse result for facts extraction (only if we have a tree)
+                        if parse_result.tree.is_some() {
+                            parse_results.insert(file.path.clone(), parse_result);
+                        }
                     } else {
                         // No parser available for this language
                         println!("  ○ {} [{}]", file.path, lang);
@@ -103,6 +117,31 @@ fn run() -> Result<()> {
             println!("  Parsed successfully: {}", parse_summary.parsed);
             println!("  Parse errors: {}", parse_summary.failed);
             println!("  No parser available: {}", parse_summary.no_parser);
+
+            // Extract facts and write to .hixdrill/facts.json
+            let extractor = Extractor::new();
+            let mut facts = extractor.extract_facts(&files, &parse_results, &file_contents);
+            
+            // Ensure deterministic ordering
+            facts.sort();
+            
+            let facts_path = repo_path.join(".hixdrill").join("facts.json");
+            fs::create_dir_all(facts_path.parent().unwrap())
+                .with_context(|| "Failed to create .hixdrill directory")?;
+            
+            let facts_json = serde_json::to_string_pretty(&facts)
+                .with_context(|| "Failed to serialize facts to JSON")?;
+            
+            fs::write(&facts_path, facts_json)
+                .with_context(|| format!("Failed to write facts.json to {:?}", facts_path))?;
+            
+            println!("\nFacts extracted:");
+            println!("  Files: {}", facts.files.len());
+            println!("  Symbols: {}", facts.symbols.len());
+            println!("  Members: {}", facts.members.len());
+            println!("  Relations: {}", facts.relations.len());
+            println!("  Annotations: {}", facts.annotations.len());
+            println!("  Written to: {:?}", facts_path);
         }
         None => {
             // No command provided, show help

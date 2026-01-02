@@ -16,7 +16,7 @@ pub struct ParserRegistry {
 
 impl ParserRegistry {
     pub fn new() -> Self {
-        let mut parsers = HashMap::new();
+        let parsers = HashMap::new();
         
         // All languages in 0.23 use LANGUAGE constants (LanguageFn)
         // We can't store LanguageFn in HashMap<Language>, so we'll handle them in parse()

@@ -1,0 +1,44 @@
+{
+  "files": [
+    {
+      "path": "./Cargo.toml",
+      "language": "toml",
+      "hash": "87baf33932698591859412444dae16d37cbcdcc46ff8ed85963c11dc25e31fd5"
+    },
+    {
+      "path": "./README.md",
+      "language": "markdown",
+      "hash": "477632d9b0c4a7f33c168c84d2c5a625faa1e273126df5696f9f2fcfe2ce1d82"
+    },
+    {
+      "path": "./src/extractor.rs",
+      "language": "rust",
+      "hash": "ec037d499d2a4aade21edf73c2f17e2c098b9b56c7cda6bdbe4d1531bc23a6d1"
+    },
+    {
+      "path": "./src/facts.rs",
+      "language": "rust",
+      "hash": "9c4c175868b75350983a9d75f6cbff82a79010616d35ccdba3e347b5f2e5b7cd"
+    },
+    {
+      "path": "./src/main.rs",
+      "language": "rust",
+      "hash": "6cd3c2dcf2fa218cdd688054f9821493cf79ee079004ac0d52b8a3f9f760c446"
+    },
+    {
+      "path": "./src/parser.rs",
+      "language": "rust",
+      "hash": "7c1b61445a673696d45e10087cc60e39bbdc5db7ed3e71b4b545d0e19b3227de"
+    },
+    {
+      "path": "./src/scanner.rs",
+      "language": "rust",
+      "hash": "cff54de1c0a954239b651c3ee8211f7235d496561aa86beae3691a806ff0767a"
+    },
+    {
+      "path": "./test_verification.ts",
+      "language": "typescript",
+      "hash": "187771d65a8b5b4db37bff8dbc244c046ebbd2b3f5805d2b0bb5881e427d57ad"
+    }
+  ]
+}
