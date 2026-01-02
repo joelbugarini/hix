@@ -1,11 +1,14 @@
 mod extractor;
 mod facts;
+mod pack;
+mod pack_loader;
 mod parser;
 mod scanner;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use extractor::Extractor;
+use pack_loader::PackLoader;
 use parser::{ParseResult, ParserRegistry, ParseSummary};
 use scanner::Scanner;
 use std::collections::HashMap;
@@ -27,6 +30,14 @@ enum Commands {
     Scan {
         /// Path to the repository to scan
         path: String,
+    },
+    /// Analyze a repository using pattern packs
+    Analyze {
+        /// Path to the repository to analyze
+        path: String,
+        /// Path to the pattern packs directory
+        #[arg(long)]
+        packs: Option<String>,
     },
 }
 
@@ -142,6 +153,48 @@ fn run() -> Result<()> {
             println!("  Relations: {}", facts.relations.len());
             println!("  Annotations: {}", facts.annotations.len());
             println!("  Written to: {:?}", facts_path);
+        }
+        Some(Commands::Analyze { path, packs }) => {
+            let repo_path = Path::new(path);
+            
+            if !repo_path.exists() {
+                anyhow::bail!("Path does not exist: {}", path);
+            }
+
+            if !repo_path.is_dir() {
+                anyhow::bail!("Path is not a directory: {}", path);
+            }
+
+            // Load pattern packs if provided
+            if let Some(packs_path) = packs {
+                let packs_dir = Path::new(&packs_path);
+                let loader = PackLoader::new();
+                
+                match loader.load_packs(packs_dir) {
+                    Ok(loaded_packs) => {
+                        println!("Loaded {} pattern pack(s):", loaded_packs.len());
+                        for loaded_pack in &loaded_packs {
+                            println!("  - {} v{}", 
+                                loaded_pack.pack.metadata.name,
+                                loaded_pack.pack.metadata.version
+                            );
+                            if let Some(desc) = &loaded_pack.pack.metadata.description {
+                                println!("    {}", desc);
+                            }
+                            println!("    Patterns: {}", loaded_pack.pack.patterns.len());
+                            println!("    Path: {:?}", loaded_pack.path);
+                        }
+                    }
+                    Err(e) => {
+                        anyhow::bail!("Failed to load pattern packs: {}", e);
+                    }
+                }
+            } else {
+                println!("No pattern packs specified. Use --packs <folder> to load packs.");
+            }
+
+            // TODO: In Story 6, we'll match patterns against facts
+            println!("\nAnalysis complete (pattern matching will be implemented in Story 6)");
         }
         None => {
             // No command provided, show help
