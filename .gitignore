@@ -56,3 +56,6 @@ site/
 
 # Local cache
 .mkdocs/
+
+# Rust build artifacts
+drill/target/
