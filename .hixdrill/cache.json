@@ -63,7 +63,7 @@
     {
       "path": "/home/joelbugarini/workspace/hix/docs/features/_current.md",
       "language": "markdown",
-      "hash": "bbb5ed2d269ebc3aefcc518ae2a82fe067625bf0a55c4acad9875c38cb4045cd"
+      "hash": "4fa5a54d3e07187b04f0634eab2fc5c27c5f2c8af732acad095ef15b0d19d198"
     },
     {
       "path": "/home/joelbugarini/workspace/hix/docs/features/bugfix_0.3.0.1.md",
@@ -173,7 +173,7 @@
     {
       "path": "/home/joelbugarini/workspace/hix/drill/Cargo.toml",
       "language": "toml",
-      "hash": "bea2af0ff9df2f1f400b81368ce61100ccfc608c1e53c89421c0ab6753eb32ce"
+      "hash": "cde4762de8dedb0200a6ab774c3156238e4551dbadccdec69651e52793bda863"
     },
     {
       "path": "/home/joelbugarini/workspace/hix/drill/README.md",
@@ -183,7 +183,12 @@
     {
       "path": "/home/joelbugarini/workspace/hix/drill/src/main.rs",
       "language": "rust",
-      "hash": "6fa52028ce35f6d147aff5bf5e85234c8c5d7e862046ad86fb246781312da4ec"
+      "hash": "b8f4ff0e6b624cb2c7342b7f77d12d962c392982615b67ee6e03613d9e95c51d"
+    },
+    {
+      "path": "/home/joelbugarini/workspace/hix/drill/src/parser.rs",
+      "language": "rust",
+      "hash": "f9acadd9ba32aa47bae546028dfe266a15b168c4c47562c7280f9d7cca7a1de1"
     },
     {
       "path": "/home/joelbugarini/workspace/hix/drill/src/scanner.rs",
