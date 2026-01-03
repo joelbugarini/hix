@@ -1,0 +1,86 @@
+{
+  "summary": {
+    "total_files": 2,
+    "parsed_files": 2,
+    "failed_files": 0,
+    "no_parser_files": 0,
+    "total_symbols": 6,
+    "total_matches": 3,
+    "unique_patterns": 2
+  },
+  "packs": [
+    {
+      "name": "test-pack",
+      "version": "1.0.0",
+      "description": "Test pattern pack for golden tests",
+      "pattern_count": 2
+    }
+  ],
+  "matches_by_pattern": {
+    "http-endpoint": {
+      "pattern_name": "http-endpoint",
+      "count": 2,
+      "matched_symbol_ids": [
+        "sym_4",
+        "sym_5"
+      ],
+      "samples": [
+        {
+          "symbol_name": "getUsers",
+          "file": "tests/fixtures/sample-repo/src/api.ts",
+          "symbol_id": "sym_4"
+        },
+        {
+          "symbol_name": "postUser",
+          "file": "tests/fixtures/sample-repo/src/api.ts",
+          "symbol_id": "sym_5"
+        }
+      ]
+    },
+    "data-structure": {
+      "pattern_name": "data-structure",
+      "count": 1,
+      "matched_symbol_ids": [
+        "sym_0"
+      ],
+      "samples": [
+        {
+          "symbol_name": "Person",
+          "file": "tests/fixtures/sample-repo/src/Person.cs",
+          "symbol_id": "sym_0"
+        }
+      ]
+    }
+  },
+  "coverage": {
+    "symbol_coverage_percent": 50.0,
+    "matched_symbols": 3,
+    "unmatched_symbols": 3
+  },
+  "unknowns": {
+    "total_unmatched": 3,
+    "by_kind": {
+      "variable": 3
+    },
+    "samples": [
+      {
+        "symbol_name": "Name",
+        "symbol_kind": "variable",
+        "file": "tests/fixtures/sample-repo/src/Person.cs",
+        "symbol_id": "sym_1"
+      },
+      {
+        "symbol_name": "Age",
+        "symbol_kind": "variable",
+        "file": "tests/fixtures/sample-repo/src/Person.cs",
+        "symbol_id": "sym_2"
+      },
+      {
+        "symbol_name": "Email",
+        "symbol_kind": "variable",
+        "file": "tests/fixtures/sample-repo/src/Person.cs",
+        "symbol_id": "sym_3"
+      }
+    ]
+  }
+}

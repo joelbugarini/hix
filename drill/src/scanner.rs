@@ -35,6 +35,7 @@ impl Scanner {
                 "obj",
                 "target",
                 ".hixdrill",
+                ".hix",
                 ".stack-work",
             ],
         }

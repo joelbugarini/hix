@@ -1,0 +1,14 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/sample-repo/src/Person.cs",
+      "language": "csharp",
+      "hash": "c84bc0a7c0905ed94de797da0fea1266fba095bf08b144c1add62d0fa4830859"
+    },
+    {
+      "path": "tests/fixtures/sample-repo/src/api.ts",
+      "language": "typescript",
+      "hash": "9a7bcceecec1b0d4fc104056ae2f3708dac9d06d953cfc7953105da191f31113"
+    }
+  ]
+}

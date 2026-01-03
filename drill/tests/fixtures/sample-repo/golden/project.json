@@ -1,0 +1,43 @@
+{
+  "packs_used": [
+    {
+      "name": "test-pack",
+      "version": "1.0.0",
+      "path": "../packs/test-pack"
+    }
+  ],
+  "pattern_mappings": [
+    {
+      "pattern": "data-structure",
+      "instances": [
+        {
+          "symbol_id": "sym_0",
+          "symbol_name": "Person",
+          "source_file": "./Person.cs",
+          "model_file": ".hix/models/Person.json",
+          "template_file": ".hix/templates/data-structure.hix"
+        }
+      ]
+    },
+    {
+      "pattern": "http-endpoint",
+      "instances": [
+        {
+          "symbol_id": "sym_4",
+          "symbol_name": "getUsers",
+          "source_file": "./api.ts",
+          "model_file": ".hix/models/getUsers.json",
+          "template_file": ".hix/templates/http-endpoint.hix"
+        },
+        {
+          "symbol_id": "sym_5",
+          "symbol_name": "postUser",
+          "source_file": "./api.ts",
+          "model_file": ".hix/models/postUser.json",
+          "template_file": ".hix/templates/http-endpoint.hix"
+        }
+      ]
+    }
+  ],
+  "hix_config": ".hix/config.yaml"
+}

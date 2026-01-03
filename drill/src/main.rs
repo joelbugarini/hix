@@ -1,5 +1,6 @@
 mod extractor;
 mod facts;
+mod init_writer;
 mod matcher;
 mod pack;
 mod pack_loader;
@@ -10,6 +11,7 @@ mod scanner;
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
 use extractor::Extractor;
+use init_writer::InitWriter;
 use matcher::PatternMatcher;
 use pack_loader::PackLoader;
 use parser::{ParseResult, ParserRegistry, ParseSummary};
@@ -38,6 +40,14 @@ enum Commands {
     /// Analyze a repository using pattern packs
     Analyze {
         /// Path to the repository to analyze
+        path: String,
+        /// Path to the pattern packs directory
+        #[arg(long)]
+        packs: Option<String>,
+    },
+    /// Initialize hix-drill project configuration
+    Init {
+        /// Path to the repository to initialize
         path: String,
         /// Path to the pattern packs directory
         #[arg(long)]
@@ -321,6 +331,142 @@ fn run() -> Result<()> {
             }
 
             println!("\nAnalysis complete");
+        }
+        Some(Commands::Init { path, packs }) => {
+            let repo_path = Path::new(path);
+            
+            if !repo_path.exists() {
+                anyhow::bail!("Path does not exist: {}", path);
+            }
+
+            if !repo_path.is_dir() {
+                anyhow::bail!("Path is not a directory: {}", path);
+            }
+
+            // First, run analysis (same as Analyze command)
+            let scanner = Scanner::new(repo_path);
+            let files = scanner.scan(repo_path)
+                .with_context(|| format!("Failed to scan repository: {}", path))?;
+
+            // Parse files
+            let parser_registry = ParserRegistry::new();
+            let mut parse_summary = ParseSummary::new();
+            let mut parse_results: HashMap<String, ParseResult> = HashMap::new();
+            let mut file_contents: HashMap<String, String> = HashMap::new();
+
+            for file in &files {
+                if let Some(lang) = &file.language {
+                    let has_parser = matches!(lang.as_str(), "typescript" | "tsx" | "python" | "csharp" | "html");
+                    if has_parser {
+                        let content = match fs::read_to_string(&file.path) {
+                            Ok(c) => c,
+                            Err(e) => {
+                                eprintln!("Warning: Failed to read {}: {}", file.path, e);
+                                parse_summary.total_files += 1;
+                                parse_summary.failed += 1;
+                                continue;
+                            }
+                        };
+
+                        file_contents.insert(file.path.clone(), content.clone());
+                        let parse_result = parser_registry.parse(&content, lang);
+                        parse_summary.add_result(&parse_result);
+                        
+                        if parse_result.tree.is_some() {
+                            parse_results.insert(file.path.clone(), parse_result);
+                        }
+                    } else {
+                        parse_summary.total_files += 1;
+                        parse_summary.no_parser += 1;
+                    }
+                } else {
+                    parse_summary.total_files += 1;
+                    parse_summary.no_parser += 1;
+                }
+            }
+
+            // Extract facts
+            let extractor = Extractor::new();
+            let mut facts = extractor.extract_facts(&files, &parse_results, &file_contents);
+            facts.sort();
+
+            // Load and match patterns if packs are provided
+            if let Some(packs_path) = packs {
+                let packs_dir = Path::new(&packs_path);
+                let packs_dir_canonical = packs_dir.canonicalize()
+                    .unwrap_or_else(|_| packs_dir.to_path_buf())
+                    .to_string_lossy()
+                    .to_string();
+                let loader = PackLoader::new();
+                
+                match loader.load_packs(packs_dir) {
+                    Ok(loaded_packs) => {
+                        println!("Loaded {} pattern pack(s):", loaded_packs.len());
+                        for loaded_pack in &loaded_packs {
+                            println!("  - {} v{}", 
+                                loaded_pack.pack.metadata.name,
+                                loaded_pack.pack.metadata.version
+                            );
+                        }
+
+                        // Collect all pattern rules
+                        let mut all_rules = Vec::new();
+                        for loaded_pack in &loaded_packs {
+                            all_rules.extend(loaded_pack.pack.patterns.clone());
+                        }
+
+                        // Match patterns against facts
+                        let matcher = PatternMatcher::new();
+                        match matcher.match_patterns(&facts, &all_rules) {
+                            Ok(match_results) => {
+                                println!("\nPattern Matching Results:");
+                                println!("  Total matches: {}", match_results.instances.len());
+
+                                // Generate drill project config
+                                let init_writer = InitWriter::new();
+                                let project_root = repo_path.canonicalize()
+                                    .unwrap_or_else(|_| repo_path.to_path_buf())
+                                    .to_string_lossy()
+                                    .to_string();
+                                
+                                let config = init_writer.generate_config(
+                                    &match_results,
+                                    &loaded_packs,
+                                    &project_root,
+                                    &packs_dir_canonical,
+                                );
+
+                                // Create .hix/drill/ directory
+                                let hix_drill_dir = repo_path.join(".hix").join("drill");
+                                fs::create_dir_all(&hix_drill_dir)
+                                    .with_context(|| format!("Failed to create .hix/drill directory: {:?}", hix_drill_dir))?;
+
+                                // Write .hix/drill/project.json
+                                let config_path = hix_drill_dir.join("project.json");
+                                let config_json = serde_json::to_string_pretty(&config)
+                                    .with_context(|| "Failed to serialize config to JSON")?;
+                                
+                                fs::write(&config_path, config_json)
+                                    .with_context(|| format!("Failed to write project.json to {:?}", config_path))?;
+
+                                println!("\nDrill project config written to: {:?}", config_path);
+                                println!("  Packs used: {}", config.packs_used.len());
+                                println!("  Pattern mappings: {}", config.pattern_mappings.len());
+                            }
+                            Err(e) => {
+                                anyhow::bail!("Pattern matching failed: {}", e);
+                            }
+                        }
+                    }
+                    Err(e) => {
+                        anyhow::bail!("Failed to load pattern packs: {}", e);
+                    }
+                }
+            } else {
+                anyhow::bail!("Pattern packs required for init. Use --packs <folder> to specify packs.");
+            }
+
+            println!("\nInitialization complete");
         }
         None => {
             // No command provided, show help

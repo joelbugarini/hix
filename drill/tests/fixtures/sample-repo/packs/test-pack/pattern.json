@@ -1,0 +1,21 @@
+[
+  {
+    "name": "data-structure",
+    "description": "DTO-like: type with only public fields/properties",
+    "match_conditions": {
+      "symbol_kind": "type",
+      "member_predicates": {
+        "only_fields": true
+      },
+      "language": ["csharp", "python"]
+    }
+  },
+  {
+    "name": "http-endpoint",
+    "description": "Function/method with route annotation or naming convention",
+    "match_conditions": {
+      "symbol_kind": "function"
+    }
+  }
+]
+

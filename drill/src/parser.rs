@@ -1,5 +1,4 @@
-use std::collections::HashMap;
-use tree_sitter::{Language, Parser, Tree};
+use tree_sitter::{Parser, Tree};
 use tree_sitter_typescript as ts_tsx;
 use tree_sitter_python as py;
 use tree_sitter_c_sharp as csharp;
@@ -10,26 +9,17 @@ pub struct ParseResult {
     pub error: Option<String>,
 }
 
-pub struct ParserRegistry {
-    parsers: HashMap<String, Language>,
-}
+pub struct ParserRegistry;
 
 impl ParserRegistry {
     pub fn new() -> Self {
-        let parsers = HashMap::new();
-        
         // All languages in 0.23 use LANGUAGE constants (LanguageFn)
-        // We can't store LanguageFn in HashMap<Language>, so we'll handle them in parse()
+        // We handle them directly in parse() method
         // TypeScript/TSX: ts_tsx::LANGUAGE_TYPESCRIPT, ts_tsx::LANGUAGE_TSX
         // Python: py::LANGUAGE
         // C#: csharp::LANGUAGE
         // HTML: html::LANGUAGE
-        
-        ParserRegistry { parsers }
-    }
-
-    pub fn get_language(&self, lang: &str) -> Option<&Language> {
-        self.parsers.get(lang)
+        ParserRegistry
     }
 
     pub fn parse(&self, content: &str, language: &str) -> ParseResult {

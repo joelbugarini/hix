@@ -1,0 +1,34 @@
+{
+  "instances": [
+    {
+      "pattern_name": "data-structure",
+      "symbol_id": "sym_0",
+      "symbol_name": "Person",
+      "file": "tests/fixtures/sample-repo/src/Person.cs",
+      "bindings": {
+        "type_name": "Person",
+        "member_count": "3"
+      }
+    },
+    {
+      "pattern_name": "http-endpoint",
+      "symbol_id": "sym_4",
+      "symbol_name": "getUsers",
+      "file": "tests/fixtures/sample-repo/src/api.ts",
+      "bindings": {
+        "function_name": "getUsers",
+        "http_naming": "true"
+      }
+    },
+    {
+      "pattern_name": "http-endpoint",
+      "symbol_id": "sym_5",
+      "symbol_name": "postUser",
+      "file": "tests/fixtures/sample-repo/src/api.ts",
+      "bindings": {
+        "function_name": "postUser",
+        "http_naming": "true"
+      }
+    }
+  ]
+}

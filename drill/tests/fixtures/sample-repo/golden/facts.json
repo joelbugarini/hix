@@ -1,0 +1,128 @@
+{
+  "files": [
+    {
+      "path": "tests/fixtures/sample-repo/src/Person.cs",
+      "language": "csharp",
+      "hash": "c84bc0a7c0905ed94de797da0fea1266fba095bf08b144c1add62d0fa4830859"
+    },
+    {
+      "path": "tests/fixtures/sample-repo/src/api.ts",
+      "language": "typescript",
+      "hash": "9a7bcceecec1b0d4fc104056ae2f3708dac9d06d953cfc7953105da191f31113"
+    }
+  ],
+  "symbols": [
+    {
+      "id": "sym_0",
+      "kind": "type",
+      "name": "Person",
+      "file": "tests/fixtures/sample-repo/src/Person.cs",
+      "range": {
+        "start_line": 2,
+        "start_column": 17,
+        "end_line": 2,
+        "end_column": 23
+      }
+    },
+    {
+      "id": "sym_1",
+      "kind": "variable",
+      "name": "Name",
+      "file": "tests/fixtures/sample-repo/src/Person.cs",
+      "range": {
+        "start_line": 4,
+        "start_column": 22,
+        "end_line": 4,
+        "end_column": 26
+      }
+    },
+    {
+      "id": "sym_2",
+      "kind": "variable",
+      "name": "Age",
+      "file": "tests/fixtures/sample-repo/src/Person.cs",
+      "range": {
+        "start_line": 5,
+        "start_column": 19,
+        "end_line": 5,
+        "end_column": 22
+      }
+    },
+    {
+      "id": "sym_3",
+      "kind": "variable",
+      "name": "Email",
+      "file": "tests/fixtures/sample-repo/src/Person.cs",
+      "range": {
+        "start_line": 6,
+        "start_column": 22,
+        "end_line": 6,
+        "end_column": 27
+      }
+    },
+    {
+      "id": "sym_4",
+      "kind": "function",
+      "name": "getUsers",
+      "file": "tests/fixtures/sample-repo/src/api.ts",
+      "range": {
+        "start_line": 0,
+        "start_column": 9,
+        "end_line": 0,
+        "end_column": 17
+      }
+    },
+    {
+      "id": "sym_5",
+      "kind": "function",
+      "name": "postUser",
+      "file": "tests/fixtures/sample-repo/src/api.ts",
+      "range": {
+        "start_line": 4,
+        "start_column": 9,
+        "end_line": 4,
+        "end_column": 17
+      }
+    }
+  ],
+  "members": [
+    {
+      "symbol_id": "sym_0",
+      "name": "Age",
+      "kind": "property",
+      "type_ref": "int",
+      "range": {
+        "start_line": 5,
+        "start_column": 19,
+        "end_line": 5,
+        "end_column": 22
+      }
+    },
+    {
+      "symbol_id": "sym_0",
+      "name": "Email",
+      "kind": "property",
+      "type_ref": "string",
+      "range": {
+        "start_line": 6,
+        "start_column": 22,
+        "end_line": 6,
+        "end_column": 27
+      }
+    },
+    {
+      "symbol_id": "sym_0",
+      "name": "Name",
+      "kind": "property",
+      "type_ref": "string",
+      "range": {
+        "start_line": 4,
+        "start_column": 22,
+        "end_line": 4,
+        "end_column": 26
+      }
+    }
+  ],
+  "relations": [],
+  "annotations": []
+}
