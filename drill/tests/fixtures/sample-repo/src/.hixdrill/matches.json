@@ -26,8 +26,8 @@
       "symbol_name": "postUser",
       "file": "tests/fixtures/sample-repo/src/api.ts",
       "bindings": {
-        "function_name": "postUser",
-        "http_naming": "true"
+        "http_naming": "true",
+        "function_name": "postUser"
       }
     }
   ]

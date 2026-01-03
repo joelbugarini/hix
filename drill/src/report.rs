@@ -1,6 +1,7 @@
 use crate::facts::Facts;
 use crate::matcher::MatchResults;
 use crate::pack_loader::LoadedPack;
+use crate::unknown_discovery::{UnknownDiscoverer, UnknownDiscovery};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -119,13 +120,14 @@ impl ReportGenerator {
     }
 
     /// Generate a report from facts, matches, and loaded packs
+    /// Returns both the report and the unknown discovery results
     pub fn generate_report(
         &self,
         facts: &Facts,
         match_results: &MatchResults,
         loaded_packs: &[LoadedPack],
         parse_summary: &crate::parser::ParseSummary,
-    ) -> Report {
+    ) -> (Report, UnknownDiscovery) {
         // Calculate summary
         let total_symbols = facts.symbols.len();
         let total_matches = match_results.instances.len();
@@ -179,26 +181,20 @@ impl ReportGenerator {
             pattern_matches.matched_symbol_ids.sort();
         }
 
-        // Identify unknown clusters
-        let mut unknown_by_kind: HashMap<String, usize> = HashMap::new();
-        let mut unknown_samples: Vec<UnknownSample> = Vec::new();
+        // Use unknown discovery module to find and cluster unknowns
+        let discoverer = UnknownDiscoverer::new();
+        let unknown_discovery = discoverer.discover_unknowns(facts, &matched_symbol_ids);
         
-        for symbol in &facts.symbols {
-            if !matched_symbol_ids.contains(&symbol.id) {
-                let kind_str = format!("{:?}", symbol.kind).to_lowercase();
-                *unknown_by_kind.entry(kind_str.clone()).or_insert(0) += 1;
-                
-                // Add sample (first 10)
-                if unknown_samples.len() < 10 {
-                    unknown_samples.push(UnknownSample {
-                        symbol_name: symbol.name.clone(),
-                        symbol_kind: kind_str,
-                        file: symbol.file.clone(),
-                        symbol_id: symbol.id.clone(),
-                    });
-                }
-            }
-        }
+        // Convert to report format (backward compatible)
+        let unknown_samples: Vec<UnknownSample> = unknown_discovery.samples
+            .iter()
+            .map(|s| UnknownSample {
+                symbol_name: s.symbol_name.clone(),
+                symbol_kind: s.symbol_kind.clone(),
+                file: s.file.clone(),
+                symbol_id: s.symbol_id.clone(),
+            })
+            .collect();
 
         // Build pack info
         let packs: Vec<PackInfo> = loaded_packs
@@ -211,29 +207,32 @@ impl ReportGenerator {
             })
             .collect();
 
-        Report {
-            summary: ReportSummary {
-                total_files: parse_summary.total_files,
-                parsed_files: parse_summary.parsed,
-                failed_files: parse_summary.failed,
-                no_parser_files: parse_summary.no_parser,
-                total_symbols,
-                total_matches,
-                unique_patterns: matches_by_pattern.len(),
+        (
+            Report {
+                summary: ReportSummary {
+                    total_files: parse_summary.total_files,
+                    parsed_files: parse_summary.parsed,
+                    failed_files: parse_summary.failed,
+                    no_parser_files: parse_summary.no_parser,
+                    total_symbols,
+                    total_matches,
+                    unique_patterns: matches_by_pattern.len(),
+                },
+                packs,
+                matches_by_pattern,
+                coverage: CoverageMetrics {
+                    symbol_coverage_percent,
+                    matched_symbols: matched_symbols_count,
+                    unmatched_symbols: unmatched_symbols_count,
+                },
+                unknowns: UnknownClusters {
+                    total_unmatched: unknown_discovery.total_unmatched,
+                    by_kind: unknown_discovery.by_kind.clone(),
+                    samples: unknown_samples,
+                },
             },
-            packs,
-            matches_by_pattern,
-            coverage: CoverageMetrics {
-                symbol_coverage_percent,
-                matched_symbols: matched_symbols_count,
-                unmatched_symbols: unmatched_symbols_count,
-            },
-            unknowns: UnknownClusters {
-                total_unmatched: unmatched_symbols_count,
-                by_kind: unknown_by_kind,
-                samples: unknown_samples,
-            },
-        }
+            unknown_discovery,
+        )
     }
 
     /// Generate markdown report from JSON report

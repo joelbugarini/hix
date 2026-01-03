@@ -7,6 +7,7 @@ mod pack_loader;
 mod parser;
 mod report;
 mod scanner;
+mod unknown_discovery;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -293,12 +294,23 @@ fn run() -> Result<()> {
 
                                 // Generate report
                                 let report_generator = ReportGenerator::new();
-                                let report = report_generator.generate_report(
+                                let (report, unknown_discovery) = report_generator.generate_report(
                                     &facts,
                                     &match_results,
                                     &loaded_packs,
                                     &parse_summary,
                                 );
+
+                                // Write unknowns.json
+                                let unknowns_path = repo_path.join(".hixdrill").join("unknowns.json");
+                                let unknowns_json = serde_json::to_string_pretty(&unknown_discovery)
+                                    .with_context(|| "Failed to serialize unknowns to JSON")?;
+                                
+                                fs::write(&unknowns_path, unknowns_json)
+                                    .with_context(|| format!("Failed to write unknowns.json to {:?}", unknowns_path))?;
+                                
+                                println!("\nUnknowns written to: {:?}", unknowns_path);
+                                println!("  Clusters found: {}", unknown_discovery.clusters.len());
 
                                 // Write report.json
                                 let report_json_path = repo_path.join(".hixdrill").join("report.json");

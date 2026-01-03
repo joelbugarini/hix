@@ -164,6 +164,33 @@ fn test_analyze_golden() {
         );
     }
     
+    // Check unknowns.json (created by analyze command)
+    let unknowns_path = hixdrill_dir.join("unknowns.json");
+    if unknowns_path.exists() {
+        let actual_unknowns = fs::read_to_string(&unknowns_path)
+            .expect("Failed to read unknowns.json");
+        
+        let golden_unknowns_path = fixture_dir.join("golden").join("unknowns.json");
+        if !golden_unknowns_path.exists() {
+            fs::write(&golden_unknowns_path, &actual_unknowns)
+                .expect("Failed to write golden unknowns");
+            println!("Created golden unknowns file: {:?}", golden_unknowns_path);
+        } else {
+            let golden_unknowns = fs::read_to_string(&golden_unknowns_path)
+                .expect("Failed to read golden unknowns");
+            
+            let actual_unknowns_json: serde_json::Value = serde_json::from_str(&actual_unknowns)
+                .expect("Failed to parse actual unknowns");
+            let golden_unknowns_json: serde_json::Value = serde_json::from_str(&golden_unknowns)
+                .expect("Failed to parse golden unknowns");
+            
+            assert_eq!(
+                actual_unknowns_json, golden_unknowns_json,
+                "Generated unknowns do not match golden file"
+            );
+        }
+    }
+    
     // Check facts.json (created by scan command, but analyze also extracts facts)
     // Note: analyze doesn't write facts.json, only scan does
     // But we can test scan separately or verify facts are used in analyze

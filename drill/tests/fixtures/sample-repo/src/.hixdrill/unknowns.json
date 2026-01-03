@@ -1,0 +1,44 @@
+{
+  "total_unmatched": 3,
+  "clusters": [
+    {
+      "cluster_id": "cluster_0",
+      "fingerprint": {
+        "kind": "variable",
+        "member_signature": "",
+        "shape_hash": "e57e998726030b84d971fa8bd41e1ebe0bc4cd40474e79f7e927efb00f9f348f"
+      },
+      "size": 3,
+      "symbol_ids": [
+        "sym_1",
+        "sym_2",
+        "sym_3"
+      ],
+      "samples": [
+        {
+          "symbol_id": "sym_1",
+          "symbol_name": "Name",
+          "file": "tests/fixtures/sample-repo/src/Person.cs",
+          "symbol_kind": "variable"
+        },
+        {
+          "symbol_id": "sym_2",
+          "symbol_name": "Age",
+          "file": "tests/fixtures/sample-repo/src/Person.cs",
+          "symbol_kind": "variable"
+        },
+        {
+          "symbol_id": "sym_3",
+          "symbol_name": "Email",
+          "file": "tests/fixtures/sample-repo/src/Person.cs",
+          "symbol_kind": "variable"
+        }
+      ],
+      "rank_score": 0.0
+    }
+  ],
+  "by_kind": {
+    "variable": 3
+  },
+  "samples": []
+}
