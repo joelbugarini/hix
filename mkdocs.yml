@@ -18,5 +18,14 @@ nav:
   - CLI Reference: cli.md
   - Grammar: grammar.md
   - Bug Report Template: bug-report-template.md
+  - hix-drill:
+    - hix-drill Home: drill-index.md
+    - Overview: drill-overview.md
+    - Installation: drill-installation.md
+    - Quickstart: drill-quickstart.md
+    - Commands: drill-commands.md
+    - Pattern Packs: drill-pattern-packs.md
+    - Output Format: drill-output-format.md
+    - Examples: drill-examples.md
 
 docs_dir: docs

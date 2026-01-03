@@ -44,6 +44,8 @@ Hix is a powerful code generation tool designed to help you implement clean arch
 
 ## Documentation
 
+### Hix (Code Generation)
+
 - [CLI Commands](cli.md) - Learn about available commands and options
 - [Usage Guide](usage.md) - Get started with basic usage
 - [Template Syntax](grammar.md) - Understand the template language
@@ -51,6 +53,19 @@ Hix is a powerful code generation tool designed to help you implement clean arch
 - [Templates](templates.md) - Learn about creating and using templates
 - [Real-world Use Cases](real-world-usecase.md) - See how Hix is used in practice
 - [Roadmap](roadmap.md) - Future plans and upcoming features
+
+### hix-drill (Code Analysis)
+
+hix-drill is a Rust-based CLI tool that analyzes codebases and generates Hix project configurations.
+
+- **[hix-drill Documentation](drill-index.md)** - Complete hix-drill documentation index
+- [Overview](drill-overview.md) - What is hix-drill and how it works
+- [Installation](drill-installation.md) - Install and build hix-drill
+- [Quickstart](drill-quickstart.md) - Analyze your first repository
+- [Commands](drill-commands.md) - Command reference
+- [Pattern Packs](drill-pattern-packs.md) - Understanding and creating patterns
+- [Output Format](drill-output-format.md) - Output file format reference
+- [Examples](drill-examples.md) - Practical usage examples
 
 ## Getting Help
 
