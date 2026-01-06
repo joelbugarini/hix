@@ -6,8 +6,8 @@
       "symbol_name": "Person",
       "file": "tests/fixtures/sample-repo/src/Person.cs",
       "bindings": {
-        "type_name": "Person",
-        "member_count": "3"
+        "member_count": "3",
+        "type_name": "Person"
       }
     },
     {
@@ -16,8 +16,8 @@
       "symbol_name": "getUsers",
       "file": "tests/fixtures/sample-repo/src/api.ts",
       "bindings": {
-        "function_name": "getUsers",
-        "http_naming": "true"
+        "http_naming": "true",
+        "function_name": "getUsers"
       }
     },
     {

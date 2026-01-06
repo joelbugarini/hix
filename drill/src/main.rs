@@ -7,6 +7,7 @@ mod pack_loader;
 mod parser;
 mod report;
 mod scanner;
+mod template_synthesis;
 mod unknown_discovery;
 
 use anyhow::{Context, Result};
@@ -18,6 +19,7 @@ use pack_loader::PackLoader;
 use parser::{ParseResult, ParserRegistry, ParseSummary};
 use report::ReportGenerator;
 use scanner::Scanner;
+use template_synthesis::{SynthesisMetadata, TemplateSynthesizer};
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -311,6 +313,60 @@ fn run() -> Result<()> {
                                 
                                 println!("\nUnknowns written to: {:?}", unknowns_path);
                                 println!("  Clusters found: {}", unknown_discovery.clusters.len());
+
+                                // Synthesize templates for top clusters (v1: top 3)
+                                if !unknown_discovery.clusters.is_empty() {
+                                    let synthesizer = TemplateSynthesizer::new();
+                                    let synthesis_dir = repo_path.join(".hixdrill").join("synthesis");
+                                    fs::create_dir_all(&synthesis_dir)
+                                        .with_context(|| "Failed to create synthesis directory")?;
+
+                                    let top_clusters: Vec<_> = unknown_discovery.clusters.iter().take(3).collect();
+                                    println!("\nSynthesizing templates for top {} cluster(s)...", top_clusters.len());
+
+                                    for cluster in top_clusters {
+                                        match synthesizer.synthesize(cluster, &facts, repo_path) {
+                                            Ok(result) => {
+                                                // Create cluster-specific synthesis directory
+                                                let cluster_dir = synthesis_dir.join(&cluster.cluster_id);
+                                                fs::create_dir_all(&cluster_dir)
+                                                    .with_context(|| "Failed to create cluster synthesis directory")?;
+
+                                                // Build metadata
+                                                let sample_files: Vec<String> = cluster
+                                                    .samples
+                                                    .iter()
+                                                    .map(|s| s.file.clone())
+                                                    .collect();
+                                                
+                                                let metadata = SynthesisMetadata {
+                                                    template_name: result.template_name.clone(),
+                                                    language: result.language.clone(),
+                                                    cluster_id: cluster.cluster_id.clone(),
+                                                    placeholders: result.placeholders.clone(),
+                                                    base_sample_file: result.base_sample_file.clone(),
+                                                    sample_files,
+                                                };
+
+                                                // Write synthesis files
+                                                match synthesizer.write_synthesis(&result, &metadata, &cluster_dir) {
+                                                    Ok(_) => {
+                                                        println!("  ✓ Synthesized template for {}: {}", 
+                                                            cluster.cluster_id, result.template_name);
+                                                    }
+                                                    Err(e) => {
+                                                        eprintln!("  ✗ Failed to write synthesis for {}: {}", 
+                                                            cluster.cluster_id, e);
+                                                    }
+                                                }
+                                            }
+                                            Err(e) => {
+                                                eprintln!("  ✗ Failed to synthesize template for {}: {}", 
+                                                    cluster.cluster_id, e);
+                                            }
+                                        }
+                                    }
+                                }
 
                                 // Write report.json
                                 let report_json_path = repo_path.join(".hixdrill").join("report.json");

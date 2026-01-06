@@ -281,3 +281,140 @@ fn test_scan_golden() {
     );
 }
 
+#[test]
+fn test_synthesis_golden() {
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+    
+    // Clean up any previous test runs
+    let hixdrill_dir = src_dir.join(".hixdrill");
+    let _ = fs::remove_dir_all(&hixdrill_dir);
+    
+    // Run analyze command to generate synthesis files
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "analyze",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute analyze command");
+    
+    // Check command succeeded
+    assert!(
+        output.status.success(),
+        "Analyze command failed:\nSTDOUT:\n{}\nSTDERR:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    
+    // Check synthesis.json files (one per cluster)
+    let synthesis_dir = hixdrill_dir.join("synthesis");
+    if synthesis_dir.exists() {
+        // Find all synthesis.json files
+        let synthesis_files: Vec<_> = fs::read_dir(&synthesis_dir)
+            .expect("Failed to read synthesis directory")
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                if path.is_dir() {
+                    let synthesis_json = path.join("synthesis.json");
+                    if synthesis_json.exists() {
+                        Some(synthesis_json)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        for synthesis_path in synthesis_files {
+            let actual_synthesis = fs::read_to_string(&synthesis_path)
+                .expect("Failed to read synthesis.json");
+            
+            // Create golden path based on cluster directory name
+            let cluster_dir = synthesis_path.parent().unwrap();
+            let cluster_name = cluster_dir.file_name().unwrap().to_str().unwrap();
+            let golden_synthesis_path = fixture_dir.join("golden").join("synthesis").join(cluster_name).join("synthesis.json");
+            
+            if !golden_synthesis_path.exists() {
+                fs::create_dir_all(golden_synthesis_path.parent().unwrap())
+                    .expect("Failed to create golden synthesis directory");
+                fs::write(&golden_synthesis_path, &actual_synthesis)
+                    .expect("Failed to write golden synthesis");
+                println!("Created golden synthesis file: {:?}", golden_synthesis_path);
+            } else {
+                let golden_synthesis = fs::read_to_string(&golden_synthesis_path)
+                    .expect("Failed to read golden synthesis");
+                
+                let actual_synthesis_json: serde_json::Value = serde_json::from_str(&actual_synthesis)
+                    .expect("Failed to parse actual synthesis");
+                let golden_synthesis_json: serde_json::Value = serde_json::from_str(&golden_synthesis)
+                    .expect("Failed to parse golden synthesis");
+                
+                assert_eq!(
+                    actual_synthesis_json, golden_synthesis_json,
+                    "Generated synthesis does not match golden file for cluster {}",
+                    cluster_name
+                );
+            }
+            
+            // Check template files (recursively in templates directory)
+            let template_dir = cluster_dir.join("templates");
+            if template_dir.exists() {
+                let mut template_files: Vec<_> = Vec::new();
+                find_template_files(&template_dir, &mut template_files);
+                
+                fn find_template_files(dir: &Path, files: &mut Vec<std::path::PathBuf>) {
+                    if let Ok(entries) = fs::read_dir(dir) {
+                        for entry in entries {
+                            if let Ok(entry) = entry {
+                                let path = entry.path();
+                                if path.is_file() && path.extension() == Some(std::ffi::OsStr::new("hix")) {
+                                    files.push(path);
+                                } else if path.is_dir() {
+                                    find_template_files(&path, files);
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                for template_path in template_files {
+                    let actual_template = fs::read_to_string(&template_path)
+                        .expect("Failed to read template file");
+                    
+                    // Create golden path
+                    let template_name = template_path.file_name().unwrap().to_str().unwrap();
+                    let language_dir = template_path.parent().unwrap().file_name().unwrap().to_str().unwrap();
+                    let golden_template_path = fixture_dir.join("golden").join("synthesis").join(cluster_name)
+                        .join("templates").join(language_dir).join(template_name);
+                    
+                    if !golden_template_path.exists() {
+                        fs::create_dir_all(golden_template_path.parent().unwrap())
+                            .expect("Failed to create golden template directory");
+                        fs::write(&golden_template_path, &actual_template)
+                            .expect("Failed to write golden template");
+                        println!("Created golden template file: {:?}", golden_template_path);
+                    } else {
+                        let golden_template = fs::read_to_string(&golden_template_path)
+                            .expect("Failed to read golden template");
+                        
+                        assert_eq!(
+                            actual_template, golden_template,
+                            "Generated template does not match golden file for {}",
+                            template_name
+                        );
+                    }
+                }
+            }
+        }
+    }
+}
+
