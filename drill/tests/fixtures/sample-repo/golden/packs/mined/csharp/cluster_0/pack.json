@@ -1,0 +1,7 @@
+{
+  "schema_version": "1.0.0",
+  "name": "mined-csharp-cluster_0",
+  "version": "1.0.0",
+  "description": "Mined pattern from cluster_0 cluster (3 samples). Generated from tests/fixtures/sample-repo/src/Person.cs.",
+  "author": "hix-drill"
+}

@@ -1,0 +1,15 @@
+[
+  {
+    "name": "mined-cluster_0",
+    "description": "Mined pattern from cluster cluster_0 (3 symbols, fingerprint: e57e998726030b84d971fa8bd41e1ebe0bc4cd40474e79f7e927efb00f9f348f)",
+    "match_conditions": {
+      "language": [
+        "csharp"
+      ],
+      "member_predicates": {
+        "max_fields": 0
+      },
+      "symbol_kind": "type"
+    }
+  }
+]

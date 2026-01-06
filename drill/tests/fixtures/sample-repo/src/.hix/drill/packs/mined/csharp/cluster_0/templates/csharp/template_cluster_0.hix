@@ -1,0 +1,3 @@
+[[prop]]
+        public [[prop.type]] [[prop.name]] { get; set; }
+[[/prop]]

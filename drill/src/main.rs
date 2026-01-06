@@ -4,6 +4,7 @@ mod init_writer;
 mod matcher;
 mod model_inference;
 mod pack;
+mod pack_emitter;
 mod pack_loader;
 mod parser;
 mod report;
@@ -17,6 +18,7 @@ use clap::{Parser, Subcommand};
 use extractor::Extractor;
 use init_writer::InitWriter;
 use matcher::PatternMatcher;
+use pack_emitter::PackEmitter;
 use pack_loader::PackLoader;
 use parser::{ParseResult, ParserRegistry, ParseSummary};
 use report::ReportGenerator;
@@ -369,6 +371,27 @@ fn run() -> Result<()> {
                                                                     Ok(_) => {
                                                                         println!("  ✓ Synthesized template for {}: {}", 
                                                                             cluster.cluster_id, result.template_name);
+                                                                        
+                                                                        // Emit Pattern Pack from synthesized artifacts
+                                                                        let pack_emitter = PackEmitter::new();
+                                                                        let packs_dir = repo_path.join(".hix").join("drill").join("packs");
+                                                                        match pack_emitter.emit_pack(
+                                                                            &metadata,
+                                                                            cluster,
+                                                                            &model,
+                                                                            &facts,
+                                                                            repo_path,
+                                                                            &packs_dir,
+                                                                        ) {
+                                                                            Ok(pack_path) => {
+                                                                                println!("  ✓ Emitted pack for {}: {:?}", 
+                                                                                    cluster.cluster_id, pack_path);
+                                                                            }
+                                                                            Err(e) => {
+                                                                                eprintln!("  ✗ Failed to emit pack for {}: {}", 
+                                                                                    cluster.cluster_id, e);
+                                                                            }
+                                                                        }
                                                                     }
                                                                     Err(e) => {
                                                                         eprintln!("  ✗ Failed to write synthesis for {}: {}", 

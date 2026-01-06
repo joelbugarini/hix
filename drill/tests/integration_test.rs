@@ -1,5 +1,5 @@
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use regex::Regex;
 
@@ -592,5 +592,280 @@ fn test_template_syntax_validation() {
             println!("Validated {} template file(s)", template_files.len());
         }
     }
+}
+
+#[test]
+fn test_pack_emission_golden() {
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+    
+    // Clean up any previous test runs
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
+    let _ = fs::remove_dir_all(&hixdrill_dir);
+    
+    // Run analyze command to trigger pack emission
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "analyze",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute analyze command");
+    
+    assert!(
+        output.status.success(),
+        "Analyze command failed:\nSTDOUT:\n{}\nSTDERR:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    
+    // Check that packs directory was created
+    let packs_output_dir = hixdrill_dir.join("packs");
+    assert!(
+        packs_output_dir.exists(),
+        "Packs directory not created at {:?}",
+        packs_output_dir
+    );
+    
+    // Find all pack directories (mined/<lang>/<cluster-id>)
+    let mut pack_dirs: Vec<PathBuf> = Vec::new();
+    if let Ok(entries) = fs::read_dir(&packs_output_dir) {
+        for entry in entries {
+            if let Ok(entry) = entry {
+                let path = entry.path();
+                if path.is_dir() && path.file_name().unwrap() == "mined" {
+                    // Look for language subdirectories
+                    if let Ok(lang_entries) = fs::read_dir(&path) {
+                        for lang_entry in lang_entries {
+                            if let Ok(lang_entry) = lang_entry {
+                                let lang_path = lang_entry.path();
+                                if lang_path.is_dir() {
+                                    // Look for cluster subdirectories
+                                    if let Ok(cluster_entries) = fs::read_dir(&lang_path) {
+                                        for cluster_entry in cluster_entries {
+                                            if let Ok(cluster_entry) = cluster_entry {
+                                                let cluster_path = cluster_entry.path();
+                                                if cluster_path.is_dir() {
+                                                    pack_dirs.push(cluster_path);
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // Verify at least one pack was created
+    assert!(
+        !pack_dirs.is_empty(),
+        "No pack directories found in {:?}",
+        packs_output_dir
+    );
+    
+    // Verify each pack structure
+    for pack_dir in &pack_dirs {
+        // Check pack.json exists
+        let pack_json_path = pack_dir.join("pack.json");
+        assert!(
+            pack_json_path.exists(),
+            "pack.json not found in {:?}",
+            pack_dir
+        );
+        
+        // Check pattern.json exists
+        let pattern_json_path = pack_dir.join("pattern.json");
+        assert!(
+            pattern_json_path.exists(),
+            "pattern.json not found in {:?}",
+            pack_dir
+        );
+        
+        // Check templates directory exists
+        let templates_dir = pack_dir.join("templates");
+        assert!(
+            templates_dir.exists(),
+            "templates directory not found in {:?}",
+            pack_dir
+        );
+        
+        // Check tests/fixtures directory exists
+        let fixtures_dir = pack_dir.join("tests").join("fixtures");
+        assert!(
+            fixtures_dir.exists(),
+            "tests/fixtures directory not found in {:?}",
+            pack_dir
+        );
+        
+        // Check tests/expected directory exists
+        let expected_dir = pack_dir.join("tests").join("expected");
+        assert!(
+            expected_dir.exists(),
+            "tests/expected directory not found in {:?}",
+            pack_dir
+        );
+        
+        // Verify pack.json structure
+        let pack_json_content = fs::read_to_string(&pack_json_path)
+            .expect("Failed to read pack.json");
+        let pack_json: serde_json::Value = serde_json::from_str(&pack_json_content)
+            .expect("Failed to parse pack.json");
+        
+        assert_eq!(
+            pack_json["schema_version"],
+            "1.0.0",
+            "pack.json has incorrect schema_version"
+        );
+        assert!(
+            pack_json["name"].is_string(),
+            "pack.json missing name field"
+        );
+        assert!(
+            pack_json["version"].is_string(),
+            "pack.json missing version field"
+        );
+        
+        // Verify pattern.json structure
+        let pattern_json_content = fs::read_to_string(&pattern_json_path)
+            .expect("Failed to read pattern.json");
+        let pattern_json: serde_json::Value = serde_json::from_str(&pattern_json_content)
+            .expect("Failed to parse pattern.json");
+        
+        assert!(
+            pattern_json.is_array(),
+            "pattern.json should be an array"
+        );
+        assert!(
+            !pattern_json.as_array().unwrap().is_empty(),
+            "pattern.json should contain at least one pattern"
+        );
+        
+        let first_pattern = &pattern_json[0];
+        assert!(
+            first_pattern["name"].is_string(),
+            "pattern.json pattern missing name"
+        );
+        assert!(
+            first_pattern["match_conditions"].is_object(),
+            "pattern.json pattern missing match_conditions"
+        );
+        
+        // Verify template file exists
+        let mut template_found = false;
+        if let Ok(template_entries) = fs::read_dir(&templates_dir) {
+            for entry in template_entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_dir() {
+                        // Language subdirectory
+                        if let Ok(lang_entries) = fs::read_dir(&path) {
+                            for lang_entry in lang_entries {
+                                if let Ok(lang_entry) = lang_entry {
+                                    let template_path = lang_entry.path();
+                                    if template_path.is_file() && template_path.extension() == Some(std::ffi::OsStr::new("hix")) {
+                                        template_found = true;
+                                        
+                                        // Verify template content is valid Hix syntax
+                                        let template_content = fs::read_to_string(&template_path)
+                                            .expect("Failed to read template");
+                                        
+                                        // Basic validation: should contain Hix tags
+                                        assert!(
+                                            template_content.contains("[[") && template_content.contains("]]"),
+                                            "Template does not contain Hix tags: {:?}",
+                                            template_path
+                                        );
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        assert!(
+            template_found,
+            "No .hix template file found in {:?}",
+            templates_dir
+        );
+        
+        // Verify at least one fixture file exists
+        let mut fixture_found = false;
+        if let Ok(fixture_entries) = fs::read_dir(&fixtures_dir) {
+            for entry in fixture_entries {
+                if let Ok(entry) = entry {
+                    let path = entry.path();
+                    if path.is_file() {
+                        fixture_found = true;
+                        break;
+                    }
+                }
+            }
+        }
+        
+        assert!(
+            fixture_found,
+            "No fixture files found in {:?}",
+            fixtures_dir
+        );
+        
+        // Create golden files for first pack (for comparison)
+        let pack_name = pack_dir.file_name().unwrap().to_str().unwrap();
+        let parent_name = pack_dir.parent().unwrap().file_name().unwrap().to_str().unwrap();
+        let grandparent_name = pack_dir.parent().unwrap().parent().unwrap().file_name().unwrap().to_str().unwrap();
+        let golden_pack_dir = fixture_dir.join("golden").join("packs").join(grandparent_name).join(parent_name).join(pack_name);
+        
+        // Compare pack.json
+        let golden_pack_json = golden_pack_dir.join("pack.json");
+        if !golden_pack_json.exists() {
+            fs::create_dir_all(golden_pack_json.parent().unwrap())
+                .expect("Failed to create golden pack directory");
+            fs::copy(&pack_json_path, &golden_pack_json)
+                .expect("Failed to copy pack.json to golden");
+            println!("Created golden pack.json: {:?}", golden_pack_json);
+        } else {
+            let golden_content = fs::read_to_string(&golden_pack_json)
+                .expect("Failed to read golden pack.json");
+            let golden_json: serde_json::Value = serde_json::from_str(&golden_content)
+                .expect("Failed to parse golden pack.json");
+            
+            assert_eq!(
+                pack_json, golden_json,
+                "Generated pack.json does not match golden file for pack {}",
+                pack_name
+            );
+        }
+        
+        // Compare pattern.json
+        let golden_pattern_json = golden_pack_dir.join("pattern.json");
+        if !golden_pattern_json.exists() {
+            fs::copy(&pattern_json_path, &golden_pattern_json)
+                .expect("Failed to copy pattern.json to golden");
+            println!("Created golden pattern.json: {:?}", golden_pattern_json);
+        } else {
+            let golden_content = fs::read_to_string(&golden_pattern_json)
+                .expect("Failed to read golden pattern.json");
+            let golden_json: serde_json::Value = serde_json::from_str(&golden_content)
+                .expect("Failed to parse golden pattern.json");
+            
+            assert_eq!(
+                pattern_json, golden_json,
+                "Generated pattern.json does not match golden file for pack {}",
+                pack_name
+            );
+        }
+    }
+    
+    println!("Verified {} pack(s)", pack_dirs.len());
 }
 
