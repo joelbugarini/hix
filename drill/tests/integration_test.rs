@@ -418,3 +418,90 @@ fn test_synthesis_golden() {
     }
 }
 
+#[test]
+fn test_model_inference_golden() {
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+    
+    // Clean up any previous test runs
+    let hixdrill_dir = src_dir.join(".hixdrill");
+    let _ = fs::remove_dir_all(&hixdrill_dir);
+    
+    // Run analyze command to generate model.json files
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "analyze",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute analyze command");
+    
+    // Check command succeeded
+    assert!(
+        output.status.success(),
+        "Analyze command failed:\nSTDOUT:\n{}\nSTDERR:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    
+    // Check model.json files (one per cluster)
+    let synthesis_dir = hixdrill_dir.join("synthesis");
+    if synthesis_dir.exists() {
+        // Find all model.json files
+        let model_files: Vec<_> = fs::read_dir(&synthesis_dir)
+            .expect("Failed to read synthesis directory")
+            .filter_map(|entry| {
+                let entry = entry.ok()?;
+                let path = entry.path();
+                if path.is_dir() {
+                    let model_json = path.join("model.json");
+                    if model_json.exists() {
+                        Some(model_json)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            })
+            .collect();
+        
+        for model_path in model_files {
+            let actual_model = fs::read_to_string(&model_path)
+                .expect("Failed to read model.json");
+            
+            // Create golden path based on cluster directory name
+            let cluster_dir = model_path.parent().unwrap();
+            let cluster_name = cluster_dir.file_name().unwrap().to_str().unwrap();
+            let golden_model_path = fixture_dir.join("golden").join("synthesis").join(cluster_name).join("model.json");
+            
+            if !golden_model_path.exists() {
+                fs::create_dir_all(golden_model_path.parent().unwrap())
+                    .expect("Failed to create golden model directory");
+                fs::write(&golden_model_path, &actual_model)
+                    .expect("Failed to write golden model");
+                println!("Created golden model file: {:?}", golden_model_path);
+            } else {
+                let golden_model = fs::read_to_string(&golden_model_path)
+                    .expect("Failed to read golden model");
+                
+                let actual_model_json: serde_json::Value = serde_json::from_str(&actual_model)
+                    .expect("Failed to parse actual model");
+                let golden_model_json: serde_json::Value = serde_json::from_str(&golden_model)
+                    .expect("Failed to parse golden model");
+                
+                assert_eq!(
+                    actual_model_json, golden_model_json,
+                    "Generated model does not match golden file for cluster {}",
+                    cluster_name
+                );
+            }
+        }
+    }
+}
+

@@ -1,0 +1,17 @@
+{
+  "className": "Person",
+  "properties": [
+    {
+      "name": "Age",
+      "type": "string"
+    },
+    {
+      "name": "Email",
+      "type": "string"
+    },
+    {
+      "name": "Name",
+      "type": "string"
+    }
+  ]
+}

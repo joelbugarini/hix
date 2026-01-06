@@ -2,6 +2,7 @@ mod extractor;
 mod facts;
 mod init_writer;
 mod matcher;
+mod model_inference;
 mod pack;
 mod pack_loader;
 mod parser;
@@ -20,6 +21,7 @@ use parser::{ParseResult, ParserRegistry, ParseSummary};
 use report::ReportGenerator;
 use scanner::Scanner;
 use template_synthesis::{SynthesisMetadata, TemplateSynthesizer};
+use model_inference::ModelInferrer;
 use std::collections::HashMap;
 use std::fs;
 use std::path::Path;
@@ -353,6 +355,29 @@ fn run() -> Result<()> {
                                                     Ok(_) => {
                                                         println!("  ✓ Synthesized template for {}: {}", 
                                                             cluster.cluster_id, result.template_name);
+                                                        
+                                                        // Infer model from synthesis
+                                                        let inferrer = ModelInferrer::new();
+                                                        match inferrer.infer_model(&metadata, cluster, &facts) {
+                                                            Ok(model) => {
+                                                                // Write model.json
+                                                                let model_path = cluster_dir.join("model.json");
+                                                                match inferrer.write_model(&model, &model_path) {
+                                                                    Ok(_) => {
+                                                                        println!("  ✓ Inferred model for {}: {}", 
+                                                                            cluster.cluster_id, model.className);
+                                                                    }
+                                                                    Err(e) => {
+                                                                        eprintln!("  ✗ Failed to write model for {}: {}", 
+                                                                            cluster.cluster_id, e);
+                                                                    }
+                                                                }
+                                                            }
+                                                            Err(e) => {
+                                                                eprintln!("  ✗ Failed to infer model for {}: {}", 
+                                                                    cluster.cluster_id, e);
+                                                            }
+                                                        }
                                                     }
                                                     Err(e) => {
                                                         eprintln!("  ✗ Failed to write synthesis for {}: {}", 
