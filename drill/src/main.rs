@@ -12,6 +12,7 @@ mod scanner;
 mod template_synthesis;
 mod template_validator;
 mod unknown_discovery;
+mod validator;
 
 use anyhow::{Context, Result};
 use clap::{Parser, Subcommand};
@@ -25,9 +26,10 @@ use report::ReportGenerator;
 use scanner::Scanner;
 use template_synthesis::{SynthesisMetadata, TemplateSynthesizer};
 use model_inference::ModelInferrer;
+use validator::Validator;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser)]
 #[command(name = "hix-drill")]
@@ -60,6 +62,18 @@ enum Commands {
         /// Path to the pattern packs directory
         #[arg(long)]
         packs: Option<String>,
+    },
+    /// Validate mined packs against repository
+    Validate {
+        /// Path to the pattern packs directory
+        #[arg(long)]
+        packs: String,
+        /// Path to the repository to validate against
+        #[arg(long)]
+        repo: String,
+        /// Path to hix binary (optional, defaults to "hix" in PATH)
+        #[arg(long)]
+        hix_path: Option<String>,
     },
 }
 
@@ -586,6 +600,87 @@ fn run() -> Result<()> {
             }
 
             println!("\nInitialization complete");
+        }
+        Some(Commands::Validate { packs, repo, hix_path }) => {
+            let packs_dir = Path::new(packs);
+            let repo_path = Path::new(repo);
+            
+            if !packs_dir.exists() {
+                anyhow::bail!("Packs directory does not exist: {}", packs);
+            }
+            
+            if !packs_dir.is_dir() {
+                anyhow::bail!("Packs path is not a directory: {}", packs);
+            }
+            
+            if !repo_path.exists() {
+                anyhow::bail!("Repository path does not exist: {}", repo);
+            }
+            
+            if !repo_path.is_dir() {
+                anyhow::bail!("Repository path is not a directory: {}", repo);
+            }
+
+            println!("Validating packs in {:?} against repository {:?}", packs_dir, repo_path);
+            
+            let hix_path_buf = hix_path.as_ref().map(|s| PathBuf::from(s));
+            let validator = Validator::new(hix_path_buf);
+            
+            match validator.validate_packs(packs_dir, repo_path) {
+                Ok(results) => {
+                    println!("\nValidation Results:");
+                    println!("  Total packs: {}", results.total_packs);
+                    println!("  Passed: {}", results.packs_passed);
+                    println!("  Failed: {}", results.packs_failed);
+                    
+                    for pack_result in &results.pack_results {
+                        let status = if pack_result.passed { "✓" } else { "✗" };
+                        println!("\n  {} {} ({} instances: {}/{} passed)", 
+                            status,
+                            pack_result.pack_name,
+                            pack_result.instances_validated,
+                            pack_result.instances_passed,
+                            pack_result.instances_validated
+                        );
+                        
+                        if !pack_result.errors.is_empty() {
+                            println!("    Errors:");
+                            for error in &pack_result.errors {
+                                println!("      - {}: {}", error.instance, error.message);
+                                if let Some(ref diff) = error.diff {
+                                    println!("        Diff:");
+                                    for line in diff.lines().take(20) {
+                                        println!("        {}", line);
+                                    }
+                                    if diff.lines().count() > 20 {
+                                        println!("        ... (diff truncated)");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Write validation report
+                    let report_path = repo_path.join(".hix").join("drill").join("validation.json");
+                    fs::create_dir_all(report_path.parent().unwrap())
+                        .with_context(|| "Failed to create validation report directory")?;
+                    
+                    let report_json = serde_json::to_string_pretty(&results)
+                        .with_context(|| "Failed to serialize validation results")?;
+                    
+                    fs::write(&report_path, report_json)
+                        .with_context(|| format!("Failed to write validation report to {:?}", report_path))?;
+                    
+                    println!("\nValidation report written to: {:?}", report_path);
+                    
+                    if results.packs_failed > 0 {
+                        std::process::exit(1);
+                    }
+                }
+                Err(e) => {
+                    anyhow::bail!("Validation failed: {}", e);
+                }
+            }
         }
         None => {
             // No command provided, show help

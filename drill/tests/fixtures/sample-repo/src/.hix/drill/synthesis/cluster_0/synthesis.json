@@ -4,11 +4,9 @@
   "cluster_id": "cluster_0",
   "placeholders": [
     {
-      "name": "Placeholder1",
+      "name": "Property1",
       "kind": "identifier",
       "examples": [
-        "Age",
-        "Email",
         "Name"
       ],
       "range": null

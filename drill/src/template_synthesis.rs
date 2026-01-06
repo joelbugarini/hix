@@ -110,9 +110,19 @@ impl TemplateSynthesizer {
         let language = self.detect_language(&base_symbol.file)?;
 
         // Extract code regions for all symbols
+        // If symbols are members (variables), extract the full containing class structure
         let mut code_regions: Vec<(String, &Symbol)> = Vec::new();
         for symbol in &sorted_symbols {
-            let code = self.extract_code_region(symbol, project_root)?;
+            let code = if matches!(symbol.kind, crate::facts::SymbolKind::Variable) {
+                // Try to extract full class structure
+                self.extract_full_class_structure(symbol, facts, project_root)
+                    .unwrap_or_else(|_| {
+                        // Fallback to just the symbol region
+                        self.extract_code_region(symbol, project_root).unwrap_or_default()
+                    })
+            } else {
+                self.extract_code_region(symbol, project_root)?
+            };
             code_regions.push((code, symbol));
         }
 
@@ -198,6 +208,103 @@ impl TemplateSynthesizer {
         Ok(code)
     }
 
+    /// Extract full class structure (namespace, class declaration, members) for a member symbol
+    fn extract_full_class_structure(
+        &self,
+        member_symbol: &Symbol,
+        facts: &Facts,
+        project_root: &Path,
+    ) -> Result<String, String> {
+        // Find the member that corresponds to this symbol (by name and file)
+        let member = facts.members.iter()
+            .find(|m| m.name == member_symbol.name)
+            .ok_or_else(|| "Member not found".to_string())?;
+
+        // Find the containing type symbol (the member's symbol_id points to the containing type)
+        let type_symbol = facts.symbols.iter()
+            .find(|s| s.id == member.symbol_id && matches!(s.kind, crate::facts::SymbolKind::Type))
+            .ok_or_else(|| "Containing type not found".to_string())?;
+
+        // Extract full class code from the file
+        let file_path = if Path::new(&type_symbol.file).is_absolute() {
+            Path::new(&type_symbol.file).to_path_buf()
+        } else {
+            let symbol_path = Path::new(&type_symbol.file);
+            if symbol_path.starts_with(project_root) {
+                symbol_path.to_path_buf()
+            } else {
+                project_root.join(symbol_path)
+            }
+        };
+
+        let content = fs::read_to_string(&file_path)
+            .map_err(|e| format!("Failed to read file {}: {}", file_path.display(), e))?;
+
+        let lines: Vec<&str> = content.lines().collect();
+        
+        // Find namespace (for C#)
+        let mut namespace_start: Option<usize> = None;
+        let _namespace_end: Option<usize> = None;
+        let class_start = type_symbol.range.start_line as usize;
+        let mut class_end = type_symbol.range.end_line as usize;
+
+        // Look for namespace declaration before the class
+        for (i, line) in lines.iter().enumerate() {
+            if i < class_start && line.trim().starts_with("namespace") {
+                namespace_start = Some(i);
+                    // Find the opening brace (we don't need to track the end, just the start)
+                    // namespace_end is not used, but kept for potential future use
+                break;
+            }
+        }
+
+        // Find the class closing brace
+        // Start from class declaration and find matching brace
+        let mut brace_count = 0;
+        let mut found_class_brace = false;
+        for i in class_start..lines.len() {
+            let line = lines[i];
+            for ch in line.chars() {
+                if ch == '{' {
+                    brace_count += 1;
+                    found_class_brace = true;
+                } else if ch == '}' {
+                    brace_count -= 1;
+                    if found_class_brace && brace_count == 0 {
+                        class_end = i + 1;
+                        break;
+                    }
+                }
+            }
+            if found_class_brace && brace_count == 0 {
+                break;
+            }
+        }
+
+        // Extract the full structure
+        let start_line = namespace_start.unwrap_or(class_start);
+        let end_line = class_end.max(class_start + 1);
+
+        if start_line >= lines.len() {
+            return Err(format!("Start line {} out of bounds", start_line));
+        }
+
+        let end_line = end_line.min(lines.len());
+        let extracted_lines: Vec<&str> = if start_line < end_line {
+            lines[start_line..end_line].to_vec()
+        } else {
+            vec![lines[start_line]]
+        };
+
+        let code = extracted_lines.join("\n");
+
+        if code.trim().is_empty() {
+            return Err("Extracted code is empty".to_string());
+        }
+
+        Ok(code)
+    }
+
     /// Synthesize template from code regions using simple text alignment
     fn synthesize_from_code_regions(
         &self,
@@ -246,6 +353,70 @@ impl TemplateSynthesizer {
             // Replace in template (simple string replacement for v1)
             // Use word boundaries to avoid partial matches
             template = template.replace(identifier, &format!("[[{}]]", placeholder_name));
+        }
+
+        // If no varying identifiers found (all samples identical), 
+        // still identify class name and property names for Hix conversion
+        if varying_identifiers.is_empty() && !all_identifiers.is_empty() {
+            // Extract class name and property names from the code
+            let class_name = self.extract_class_name_from_code(base_code);
+            let property_names = self.extract_property_names_from_code(base_code);
+            
+            // Add class name as placeholder if found
+            if let Some(class_name) = class_name {
+                let placeholder = Placeholder {
+                    name: "ClassName".to_string(),
+                    kind: PlaceholderKind::Identifier,
+                    examples: vec![class_name.clone()],
+                    range: None,
+                };
+                placeholders.push(placeholder);
+                template = template.replace(&class_name, "[[ClassName]]");
+            }
+            
+            // Add property names as placeholders
+            // When all samples are identical, we only need ONE property declaration template
+            // The [[prop]] block will iterate over all properties in the model
+            let mut new_lines = Vec::new();
+            let mut found_first_property = false;
+            
+            for line in template.lines() {
+                let trimmed = line.trim();
+                let mut is_property_line = false;
+                
+                // Check if this is a property declaration line
+                for prop_name in &property_names {
+                    if trimmed.contains("public ") && trimmed.contains(prop_name) && trimmed.contains("{ get; set; }") {
+                        is_property_line = true;
+                        break;
+                    }
+                }
+                
+                if is_property_line {
+                    if !found_first_property {
+                        // Keep the first property declaration and replace property name with placeholder
+                        // We'll use the first property name as the template
+                        if let Some(first_prop) = property_names.first() {
+                            let placeholder = Placeholder {
+                                name: "Property1".to_string(),
+                                kind: PlaceholderKind::Identifier,
+                                examples: vec![first_prop.clone()],
+                                range: None,
+                            };
+                            placeholders.push(placeholder);
+                            
+                            // Replace the property name with [[Property1]] (will be converted to [[prop.name]] later)
+                            let new_line = line.replace(first_prop, "[[Property1]]");
+                            new_lines.push(new_line);
+                            found_first_property = true;
+                        }
+                    }
+                    // Skip other property lines - we only need one template
+                } else {
+                    new_lines.push(line.to_string());
+                }
+            }
+            template = new_lines.join("\n");
         }
 
         // If no placeholders were found but we have multiple samples, 
@@ -362,6 +533,46 @@ impl TemplateSynthesizer {
         }
 
         varying
+    }
+
+    /// Extract class name from code (for C# and similar languages)
+    fn extract_class_name_from_code(&self, code: &str) -> Option<String> {
+        // Look for "class ClassName" pattern
+        for line in code.lines() {
+            let trimmed = line.trim();
+            if trimmed.starts_with("class ") {
+                let parts: Vec<&str> = trimmed.split_whitespace().collect();
+                if parts.len() >= 2 {
+                    return Some(parts[1].to_string());
+                }
+            }
+        }
+        None
+    }
+
+    /// Extract property names from code (for C# properties)
+    fn extract_property_names_from_code(&self, code: &str) -> Vec<String> {
+        let mut property_names = Vec::new();
+        
+        // Look for "public TYPE PropertyName { get; set; }" pattern
+        for line in code.lines() {
+            let trimmed = line.trim();
+            if trimmed.contains("public ") && trimmed.contains("{ get; set; }") {
+                // Extract the property name (word before "{ get; set; }")
+                if let Some(brace_pos) = trimmed.find("{ get; set; }") {
+                    let before_brace = &trimmed[..brace_pos];
+                    let parts: Vec<&str> = before_brace.split_whitespace().collect();
+                    // Last part before the brace should be the property name
+                    if let Some(prop_name) = parts.last() {
+                        if !self.is_keyword(prop_name) {
+                            property_names.push(prop_name.to_string());
+                        }
+                    }
+                }
+            }
+        }
+        
+        property_names
     }
 
     /// Write synthesis result to files

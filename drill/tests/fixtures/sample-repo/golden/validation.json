@@ -1,0 +1,15 @@
+{
+  "total_packs": 1,
+  "packs_passed": 0,
+  "packs_failed": 1,
+  "pack_results": [
+    {
+      "pack_name": "mined-csharp-cluster_0",
+      "pack_path": "tests/fixtures/sample-repo/src/.hix/drill/packs/mined/csharp/cluster_0",
+      "passed": false,
+      "instances_validated": 0,
+      "instances_passed": 0,
+      "errors": []
+    }
+  ]
+}

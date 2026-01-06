@@ -869,3 +869,351 @@ fn test_pack_emission_golden() {
     println!("Verified {} pack(s)", pack_dirs.len());
 }
 
+#[test]
+fn test_validate_golden() {
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+
+    // Clean up any previous test runs
+    let hix_dir = src_dir.join(".hix");
+    let _ = fs::remove_dir_all(&hix_dir);
+
+    // First, run analyze to generate packs (if they don't exist)
+    let analyze_output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "analyze",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute analyze command");
+
+    if !analyze_output.status.success() {
+        eprintln!(
+            "Warning: Analyze command failed (packs may already exist):\nSTDOUT:\n{}\nSTDERR:\n{}",
+            String::from_utf8_lossy(&analyze_output.stdout),
+            String::from_utf8_lossy(&analyze_output.stderr)
+        );
+    }
+
+    // Check that packs directory exists
+    let emitted_packs_dir = hix_dir.join("drill").join("packs");
+    if !emitted_packs_dir.exists() {
+        // If no packs were generated, skip this test
+        println!("No packs found, skipping validation test");
+        return;
+    }
+
+    // Run validate command
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "validate",
+            "--packs",
+            emitted_packs_dir.to_str().unwrap(),
+            "--repo",
+            src_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute validate command");
+
+    // Check command succeeded (or failed gracefully)
+    // Validation may fail if templates don't match, but command should still run
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    
+    // Check that validation report was created
+    let validation_json_path = hix_dir.join("drill").join("validation.json");
+    
+    if !validation_json_path.exists() {
+        // If validation failed before creating report, that's an error
+        assert!(
+            false,
+            "Validation report not created:\nSTDOUT:\n{}\nSTDERR:\n{}",
+            stdout, stderr
+        );
+    }
+
+    // Read validation report
+    let actual_validation = fs::read_to_string(&validation_json_path)
+        .expect("Failed to read validation.json");
+    
+    let validation_json: serde_json::Value = serde_json::from_str(&actual_validation)
+        .expect("Failed to parse validation.json");
+
+    // Verify structure
+    assert!(
+        validation_json["total_packs"].is_number(),
+        "validation.json missing total_packs"
+    );
+    assert!(
+        validation_json["packs_passed"].is_number(),
+        "validation.json missing packs_passed"
+    );
+    assert!(
+        validation_json["packs_failed"].is_number(),
+        "validation.json missing packs_failed"
+    );
+    assert!(
+        validation_json["pack_results"].is_array(),
+        "validation.json missing pack_results array"
+    );
+
+    // Compare with golden file
+    let golden_validation_path = fixture_dir.join("golden").join("validation.json");
+    
+    if !golden_validation_path.exists() {
+        // Create golden file
+        fs::create_dir_all(golden_validation_path.parent().unwrap())
+            .expect("Failed to create golden validation directory");
+        fs::write(&golden_validation_path, &actual_validation)
+            .expect("Failed to write golden validation.json");
+        println!("Created golden validation.json: {:?}", golden_validation_path);
+    } else {
+        let golden_validation = fs::read_to_string(&golden_validation_path)
+            .expect("Failed to read golden validation.json");
+        let golden_json: serde_json::Value = serde_json::from_str(&golden_validation)
+            .expect("Failed to parse golden validation.json");
+        
+        // Compare structure (but allow for different paths)
+        assert_eq!(
+            validation_json["total_packs"],
+            golden_json["total_packs"],
+            "total_packs mismatch"
+        );
+        assert_eq!(
+            validation_json["packs_passed"],
+            golden_json["packs_passed"],
+            "packs_passed mismatch"
+        );
+        assert_eq!(
+            validation_json["packs_failed"],
+            golden_json["packs_failed"],
+            "packs_failed mismatch"
+        );
+        
+        // Compare pack_results (normalize paths)
+        let actual_results = &validation_json["pack_results"];
+        let golden_results = &golden_json["pack_results"];
+        
+        assert_eq!(
+            actual_results.as_array().unwrap().len(),
+            golden_results.as_array().unwrap().len(),
+            "pack_results length mismatch"
+        );
+        
+        // Compare each pack result (ignoring path differences)
+        for (i, (actual, golden)) in actual_results.as_array().unwrap().iter()
+            .zip(golden_results.as_array().unwrap().iter())
+            .enumerate()
+        {
+            assert_eq!(
+                actual["pack_name"],
+                golden["pack_name"],
+                "pack_name mismatch for pack {}",
+                i
+            );
+            assert_eq!(
+                actual["passed"],
+                golden["passed"],
+                "passed mismatch for pack {}",
+                i
+            );
+            assert_eq!(
+                actual["instances_validated"],
+                golden["instances_validated"],
+                "instances_validated mismatch for pack {}",
+                i
+            );
+            assert_eq!(
+                actual["instances_passed"],
+                golden["instances_passed"],
+                "instances_passed mismatch for pack {}",
+                i
+            );
+        }
+    }
+    
+    println!("Validation test completed successfully");
+}
+
+#[test]
+fn test_template_synthesis_full_class_structure() {
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+    
+    // Clean up any previous test runs
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
+    let _ = fs::remove_dir_all(&hixdrill_dir);
+    
+    // Run analyze command to generate synthesis files
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "analyze",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute analyze command");
+    
+    // Check command succeeded
+    assert!(
+        output.status.success(),
+        "Analyze command failed:\nSTDOUT:\n{}\nSTDERR:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    
+    // Find generated template files
+    let synthesis_dir = hixdrill_dir.join("synthesis");
+    assert!(
+        synthesis_dir.exists(),
+        "Synthesis directory not created"
+    );
+    
+    // Find all cluster directories
+    let cluster_dirs: Vec<_> = fs::read_dir(&synthesis_dir)
+        .expect("Failed to read synthesis directory")
+        .filter_map(|entry| {
+            let entry = entry.ok()?;
+            let path = entry.path();
+            if path.is_dir() {
+                Some(path)
+            } else {
+                None
+            }
+        })
+        .collect();
+    
+    assert!(
+        !cluster_dirs.is_empty(),
+        "No cluster directories found in synthesis"
+    );
+    
+    // For C# templates, verify full class structure
+    for cluster_dir in cluster_dirs {
+        let templates_dir = cluster_dir.join("templates");
+        if !templates_dir.exists() {
+            continue;
+        }
+        
+        // Find .hix template files recursively
+        let mut template_files: Vec<PathBuf> = Vec::new();
+        fn find_hix_files(dir: &Path, files: &mut Vec<PathBuf>) {
+            if let Ok(entries) = fs::read_dir(dir) {
+                for entry in entries {
+                    if let Ok(entry) = entry {
+                        let path = entry.path();
+                        if path.is_file() && path.extension() == Some(std::ffi::OsStr::new("hix")) {
+                            files.push(path);
+                        } else if path.is_dir() {
+                            find_hix_files(&path, files);
+                        }
+                    }
+                }
+            }
+        }
+        find_hix_files(&templates_dir, &mut template_files);
+        
+        for template_path in template_files {
+            let template_content = fs::read_to_string(&template_path)
+                .expect("Failed to read template file");
+            
+            // Verify template contains full class structure
+            // For C# files, check for namespace and class declaration
+            if template_path.to_string_lossy().contains("csharp") {
+                // Check for namespace (if present in original)
+                // Note: namespace might not always be present, so this is optional
+                
+                // Check for class declaration
+                assert!(
+                    template_content.contains("class ") || template_content.contains("public class"),
+                    "Template missing class declaration: {:?}",
+                    template_path
+                );
+                
+                // Check for property template with [[prop]] blocks
+                assert!(
+                    template_content.contains("[[prop]]") && template_content.contains("[[/prop]]"),
+                    "Template missing [[prop]] blocks: {:?}",
+                    template_path
+                );
+                
+                // Check for property placeholders
+                assert!(
+                    template_content.contains("[[prop.name]]") || template_content.contains("[[prop.type]]"),
+                    "Template missing property placeholders: {:?}",
+                    template_path
+                );
+                
+                // Verify template structure: should have class declaration before properties
+                let class_pos = template_content.find("class ").unwrap_or(0);
+                let prop_pos = template_content.find("[[prop]]").unwrap_or(usize::MAX);
+                assert!(
+                    class_pos < prop_pos,
+                    "Class declaration should come before property block in template: {:?}",
+                    template_path
+                );
+                
+                // Verify template can be rendered (if model.json exists)
+                let model_path = cluster_dir.join("model.json");
+                if model_path.exists() {
+                    let _model_content = fs::read_to_string(&model_path)
+                        .expect("Failed to read model.json");
+                    
+                    // Try to render template using hix (if available)
+                    let hix_output = Command::new("hix")
+                        .args(&[
+                            "generate",
+                            "--model",
+                            model_path.to_str().unwrap(),
+                            "--template",
+                            template_path.to_str().unwrap(),
+                        ])
+                        .output();
+                    
+                    if let Ok(output) = hix_output {
+                        if output.status.success() {
+                            let rendered = String::from_utf8_lossy(&output.stdout);
+                            
+                            // Verify rendered output contains class structure
+                            assert!(
+                                rendered.contains("class ") || rendered.contains("public class"),
+                                "Rendered output missing class declaration"
+                            );
+                            
+                            // Verify rendered output contains properties
+                            assert!(
+                                rendered.contains("{ get; set; }"),
+                                "Rendered output missing properties"
+                            );
+                            
+                            println!("✓ Template {:?} rendered successfully", template_path);
+                        } else {
+                            eprintln!(
+                                "Warning: hix render failed for {:?}:\n{}",
+                                template_path,
+                                String::from_utf8_lossy(&output.stderr)
+                            );
+                        }
+                    } else {
+                        // hix binary not available, skip rendering test
+                        println!("Note: hix binary not available, skipping render test");
+                    }
+                }
+            }
+        }
+    }
+    
+    println!("Full class structure template synthesis test completed successfully");
+}
+

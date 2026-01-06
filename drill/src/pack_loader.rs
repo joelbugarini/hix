@@ -58,7 +58,7 @@ impl PackLoader {
     }
 
     /// Load a single pack from a directory
-    fn load_pack(&self, pack_dir: &Path) -> Result<PatternPack> {
+    pub fn load_pack(&self, pack_dir: &Path) -> Result<PatternPack> {
         let pack_json_path = pack_dir.join("pack.json");
         let pattern_json_path = pack_dir.join("pattern.json");
 
