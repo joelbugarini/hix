@@ -25,7 +25,7 @@ pub struct Scanner {
 
 impl Scanner {
     pub fn new(base_path: &Path) -> Self {
-        let cache_dir = base_path.join(".hixdrill");
+        let cache_dir = base_path.join(".hix").join("drill");
         Scanner {
             cache_dir,
             ignore_dirs: vec![
@@ -34,7 +34,6 @@ impl Scanner {
                 "bin",
                 "obj",
                 "target",
-                ".hixdrill",
                 ".hix",
                 ".stack-work",
             ],

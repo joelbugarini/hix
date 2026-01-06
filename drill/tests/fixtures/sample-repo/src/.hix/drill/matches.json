@@ -6,8 +6,8 @@
       "symbol_name": "Person",
       "file": "tests/fixtures/sample-repo/src/Person.cs",
       "bindings": {
-        "type_name": "Person",
-        "member_count": "3"
+        "member_count": "3",
+        "type_name": "Person"
       }
     },
     {

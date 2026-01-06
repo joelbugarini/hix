@@ -1,4 +1,5 @@
 use crate::facts::{Facts, Symbol};
+use crate::model_inference::InferredModel;
 use crate::unknown_discovery::SymbolCluster;
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -364,6 +365,9 @@ impl TemplateSynthesizer {
     }
 
     /// Write synthesis result to files
+    /// 
+    /// Note: Kept for backward compatibility. Use `write_synthesis_with_hix_syntax` instead.
+    #[allow(dead_code)]
     pub fn write_synthesis(
         &self,
         result: &SynthesisResult,
@@ -378,6 +382,199 @@ impl TemplateSynthesizer {
         // Write template file
         let template_path = templates_dir.join(format!("{}.hix", result.template_name));
         fs::write(&template_path, &result.template)
+            .map_err(|e| format!("Failed to write template file: {}", e))?;
+
+        // Write synthesis.json
+        let synthesis_path = output_dir.join("synthesis.json");
+        let json = serde_json::to_string_pretty(metadata)
+            .map_err(|e| format!("Failed to serialize synthesis metadata: {}", e))?;
+        fs::write(&synthesis_path, json)
+            .map_err(|e| format!("Failed to write synthesis.json: {}", e))?;
+
+        Ok(())
+    }
+
+    /// Convert template with placeholders to valid Hix syntax using inferred model
+    pub fn convert_to_hix_syntax(
+        &self,
+        template: &str,
+        placeholders: &[Placeholder],
+        model: &InferredModel,
+    ) -> String {
+        let mut hix_template = template.to_string();
+
+        // Map placeholders to Hix syntax
+        for placeholder in placeholders {
+            // Try to match placeholder examples to model properties
+            let mut matched = false;
+
+            // Check if this placeholder matches a property name
+            for prop in &model.properties {
+                if placeholder.examples.contains(&prop.name) {
+                    // Replace with [[prop.name]]
+                    for example in &placeholder.examples {
+                        if example == &prop.name {
+                            hix_template = hix_template.replace(
+                                &format!("[[{}]]", placeholder.name),
+                                "[[prop.name]]",
+                            );
+                            matched = true;
+                            break;
+                        }
+                    }
+                    if matched {
+                        break;
+                    }
+                }
+            }
+
+            // Check if this placeholder matches the class name
+            if !matched && placeholder.examples.contains(&model.className) {
+                hix_template = hix_template.replace(
+                    &format!("[[{}]]", placeholder.name),
+                    "[[model.className]]",
+                );
+                matched = true;
+            }
+
+            // If not matched, try to infer from context
+            if !matched {
+                // Check if it looks like a type reference
+                for example in &placeholder.examples {
+                    if self.looks_like_type_name(example) {
+                        hix_template = hix_template.replace(
+                            &format!("[[{}]]", placeholder.name),
+                            "[[prop.type]]",
+                        );
+                        // matched is set but not used after this point - that's fine
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Replace type literals with [[prop.type]] using model property types
+        // This handles cases where types like "int", "string" are in the code
+        // Map Hix types to common language type keywords
+        let type_mapping: Vec<(&str, Vec<&str>)> = vec![
+            ("int", vec!["int", "integer", "number"]),
+            ("string", vec!["string", "str", "text"]),
+            ("bool", vec!["bool", "boolean"]),
+            ("float", vec!["float"]),
+            ("double", vec!["double"]),
+            ("decimal", vec!["decimal"]),
+            ("datetime", vec!["datetime", "date", "time"]),
+        ];
+
+        // Replace type keywords that appear before [[prop.name]]
+        // We need to replace any type keyword, not just ones matching the model type
+        // because the model might have inferred types incorrectly
+        for (_, keywords) in &type_mapping {
+            for keyword in keywords {
+                // Pattern: "public KEYWORD [[prop.name]]" -> "public [[prop.type]] [[prop.name]]"
+                let pattern = format!("public {} [[prop.name]]", keyword);
+                if hix_template.contains(&pattern) {
+                    hix_template = hix_template.replace(&pattern, "public [[prop.type]] [[prop.name]]");
+                }
+                // Also handle with different spacing/indentation
+                let pattern2 = format!("        public {} [[prop.name]]", keyword);
+                if hix_template.contains(&pattern2) {
+                    hix_template = hix_template.replace(&pattern2, "        public [[prop.type]] [[prop.name]]");
+                }
+                // Handle without "public"
+                let pattern3 = format!("{} [[prop.name]]", keyword);
+                if hix_template.contains(&pattern3) && !hix_template.contains("[[prop.type]]") {
+                    hix_template = hix_template.replace(&pattern3, "[[prop.type]] [[prop.name]]");
+                }
+            }
+        }
+
+        // Wrap property patterns in [[prop]]...[[/prop]] blocks if needed
+        if hix_template.contains("[[prop.name]]") || hix_template.contains("[[prop.type]]") {
+            // Check if already in a prop block
+            if !hix_template.contains("[[prop]]") {
+                // Try to wrap the property pattern
+                hix_template = self.wrap_properties_in_block(&hix_template);
+            }
+        }
+
+        hix_template
+    }
+
+    /// Check if a string looks like a type name
+    fn looks_like_type_name(&self, name: &str) -> bool {
+        let lower = name.to_lowercase();
+        matches!(
+            lower.as_str(),
+            "int" | "integer" | "string" | "str" | "bool" | "boolean"
+                | "float" | "double" | "decimal" | "datetime" | "date" | "time"
+                | "uuid" | "guid" | "binary" | "text"
+        ) || name.chars().next().map_or(false, |c| c.is_uppercase())
+    }
+
+    /// Wrap property patterns in [[prop]]...[[/prop]] blocks
+    fn wrap_properties_in_block(&self, template: &str) -> String {
+        // Simple heuristic: wrap lines containing [[prop.type]] and [[prop.name]]
+        let lines: Vec<&str> = template.lines().collect();
+        let mut result = String::new();
+        let mut in_prop_block = false;
+        let mut prop_lines: Vec<String> = Vec::new();
+
+        for line in lines {
+            if line.contains("[[prop.name]]") || line.contains("[[prop.type]]") {
+                if !in_prop_block {
+                    // Start prop block
+                    in_prop_block = true;
+                    result.push_str("[[prop]]\n");
+                }
+                prop_lines.push(line.to_string());
+            } else {
+                if in_prop_block {
+                    // End prop block
+                    for prop_line in &prop_lines {
+                        result.push_str(prop_line);
+                        result.push('\n');
+                    }
+                    result.push_str("[[/prop]]\n");
+                    prop_lines.clear();
+                    in_prop_block = false;
+                }
+                result.push_str(line);
+                result.push('\n');
+            }
+        }
+
+        // Close any open prop block
+        if in_prop_block {
+            for prop_line in &prop_lines {
+                result.push_str(prop_line);
+                result.push('\n');
+            }
+            result.push_str("[[/prop]]\n");
+        }
+
+        result.trim_end().to_string()
+    }
+
+    /// Write synthesis result with Hix syntax conversion
+    pub fn write_synthesis_with_hix_syntax(
+        &self,
+        result: &SynthesisResult,
+        metadata: &SynthesisMetadata,
+        model: &InferredModel,
+        output_dir: &Path,
+    ) -> Result<(), String> {
+        // Convert to valid Hix syntax
+        let hix_template = self.convert_to_hix_syntax(&result.template, &result.placeholders, model);
+
+        // Create output directory structure
+        let templates_dir = output_dir.join("templates").join(&result.language);
+        fs::create_dir_all(&templates_dir)
+            .map_err(|e| format!("Failed to create templates directory: {}", e))?;
+
+        // Write template file with Hix syntax
+        let template_path = templates_dir.join(format!("{}.hix", result.template_name));
+        fs::write(&template_path, &hix_template)
             .map_err(|e| format!("Failed to write template file: {}", e))?;
 
         // Write synthesis.json

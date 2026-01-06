@@ -1,0 +1,23 @@
+{
+  "template_name": "template_cluster_0",
+  "language": "csharp",
+  "cluster_id": "cluster_0",
+  "placeholders": [
+    {
+      "name": "Placeholder1",
+      "kind": "identifier",
+      "examples": [
+        "Age",
+        "Email",
+        "Name"
+      ],
+      "range": null
+    }
+  ],
+  "base_sample_file": "tests/fixtures/sample-repo/src/Person.cs",
+  "sample_files": [
+    "tests/fixtures/sample-repo/src/Person.cs",
+    "tests/fixtures/sample-repo/src/Person.cs",
+    "tests/fixtures/sample-repo/src/Person.cs"
+  ]
+}

@@ -29,9 +29,9 @@ The tool must be:
 * `hix-drill` builds and runs on Linux/macOS/Windows
 * Can analyze a sample repo and output:
 
-  * `.hixdrill/facts.json`
-  * `.hixdrill/report.json`
-  * `hix.project.json` (or chosen config filename)
+  * `.hix/drill/facts.json`
+  * `.hix/drill/report.json`
+  * `.hix/drill/project.json` (or chosen config filename)
 * Loads Pattern Packs from a folder and matches at least **2 real patterns** (e.g., DTO-like and HTTP endpoint-like)
 * Deterministic output (stable ordering, same input → same output)
 * Includes at least one fixture test that asserts stable output
@@ -61,7 +61,7 @@ The tool must be:
 
 4. **Initializer / Config Writer**
 
-* Convert instances → `hix.project.json`
+* Convert instances → `.hix/drill/project.json`
 * Optionally emit starter templates/models when requested
 
 5. **Reporter**
@@ -106,10 +106,10 @@ The tool must be:
 
 * Implement recursive scanning with ignore rules:
 
-  * ignore `.git/`, `node_modules/`, `bin/`, `obj/`, `target/`, `.hixdrill/`
+  * ignore `.git/`, `node_modules/`, `bin/`, `obj/`, `target/`, `.hix/`
 * Determine language per file extension
 * Compute hash per file (for incremental reruns)
-* Write `.hixdrill/cache.json` (or sqlite later)
+* Write `.hix/drill/cache.json` (or sqlite later)
 
 **Acceptance Criteria**
 
@@ -150,7 +150,7 @@ The tool must be:
 
 * Define Rust structs + serde
 * Implement extractor for one language (enough to find types + props + functions)
-* Write `.hixdrill/facts.json`
+* Write `.hix/drill/facts.json`
 
 **Acceptance Criteria**
 
@@ -193,7 +193,7 @@ The tool must be:
 * Implement a simple DSL for match rules:
 
   * symbol kind + member predicates + annotation predicates
-* Output `.hixdrill/matches.json` (instances + bindings)
+* Output `.hix/drill/matches.json` (instances + bindings)
 
 **Acceptance Criteria**
 
@@ -215,7 +215,7 @@ The tool must be:
 
 **Acceptance Criteria**
 
-* `.hixdrill/report.json` and `.hixdrill/report.md` generated
+* `.hix/drill/report.json` and `.hix/drill/report.md` generated
 
 ---
 
@@ -225,7 +225,7 @@ The tool must be:
 
 **Tasks**
 
-* Define `hix.project.json` schema v1 (minimal)
+* Define `.hix/drill/project.json` schema v1 (minimal)
 
   * project root
   * generated outputs
@@ -235,7 +235,7 @@ The tool must be:
 
 **Acceptance Criteria**
 
-* `hix-drill init` writes config
+* `hix-drill init` writes `.hix/drill/project.json`
 * Config is stable and references packs + templates (placeholders allowed)
 
 ---
@@ -280,7 +280,7 @@ Where Drill:
 2. Matches known Pattern Packs
 3. Mines unknown repeating structures
 4. Synthesizes **new Pattern Packs** (pattern + rules + templates)
-5. Writes `hix.project.json`
+5. Writes `.hix/drill/project.json`
 6. Proves correctness via **round-trip validation** (generate → diff)
 
 This epic is about making template creation **deterministic and transparent**, with optional LLM assistance only for naming/ergonomics.
@@ -293,10 +293,10 @@ On a previously unseen repo:
 
 * `hix drill init --mine` produces:
 
-  * `.hixdrill/facts.json`
-  * `.hixdrill/report.md`
-  * `.hixdrill/packs/<new-pack>/...`
-  * `hix.project.json`
+  * `.hix/drill/facts.json`
+  * `.hix/drill/report.md`
+  * `.hix/drill/packs/<new-pack>/...`
+  * `.hix/drill/project.json`
 * Running `hix generate` after init yields either:
 
   * **no diffs** (ideal), or
@@ -334,7 +334,7 @@ On a previously unseen repo:
   * frequency
   * size/complexity
   * churn potential (optional later)
-* Emit `.hixdrill/unknowns.json` and a human summary in `report.md`
+* Emit `.hix/drill/unknowns.json` and a human summary in `report.md`
 
 **Acceptance Criteria**
 
@@ -395,7 +395,7 @@ On a previously unseen repo:
 
 ### Story 13 — Pack emission (create new Pattern Pack from mined artifacts)
 
-**Outcome:** Turn synthesized outputs into a reusable Pattern Pack in `.hixdrill/packs/`.
+**Outcome:** Turn synthesized outputs into a reusable Pattern Pack in `.hix/drill/packs/`.
 
 **Tasks**
 
@@ -459,7 +459,7 @@ On a previously unseen repo:
   3. mine unknown clusters
   4. synthesize packs/templates
   5. validate (gate)
-  6. write `hix.project.json`
+  6. write `.hix/drill/project.json`
   7. write `report.md`
 * Add `--mine-limit` (top N clusters)
 * Add `--mine-language` (only mine chosen language)
@@ -495,25 +495,29 @@ On a previously unseen repo:
 
 **Outcome:** Ensure mined templates are valid Hix templates and can express common structures like lists.
 
+**Status:** Partially implemented in Stories 11-12. Template synthesis now generates valid Hix syntax with:
+* `[[model.className]]` for class names
+* `[[prop.name]]` and `[[prop.type]]` for properties
+* `[[prop]]...[[/prop]]` blocks for property loops
+* Template validation ensures syntax correctness
+
 **Tasks**
 
-* Define a small internal “template emitter” API that outputs Hix syntax deterministically:
+* Enhance template emitter API for more complex structures:
 
-  * scalar placeholder: `[[model.field]]`
-  * list section: `[[items]] ... [[/items]]`
   * nested object: `[[item.subField]]`
-* Add escaping rules so generated templates don’t break:
+  * conditional sections: `[[if prop.type=bool]]...[[/if]]`
+* Add escaping rules so generated templates don't break:
 
   * handle `[[` / `]]` appearing in source
   * handle braces/quotes safely when turned into literal text
 * Add stable indentation rules for emitted templates
+* Integrate with Hix lexer/parser for validation (Story 18)
 
 **Acceptance Criteria**
 
-* For a DTO-like cluster, Drill can emit a valid template such as:
-
-  * `public class [[model.className]] {` with a `[[prop]]` section
-* Generated templates parse successfully with the Hix lexer/parser
+* For a DTO-like cluster, Drill emits valid templates with `[[prop]]` sections (already working)
+* Generated templates parse successfully with the Hix lexer/parser (via Story 18 validator)
 
 ---
 

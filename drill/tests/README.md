@@ -54,8 +54,8 @@ cargo test --test integration_test
   - Compares against golden file
 
 - **test_analyze_golden**: Tests `hix-drill analyze` command
-  - Verifies `.hixdrill/matches.json` is created
-  - Verifies `.hixdrill/report.json` is created
+  - Verifies `.hix/drill/matches.json` is created
+  - Verifies `.hix/drill/report.json` is created
   - Compares against golden files
 
 ## Adding New Tests

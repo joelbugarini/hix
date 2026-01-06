@@ -19,8 +19,9 @@ pub struct ModelProperty {
 
 /// Inferred model schema (compatible with Hix model format)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[allow(non_snake_case)] // className matches Hix JSON schema format
 pub struct InferredModel {
-    /// Class/type name
+    /// Class/type name (camelCase to match Hix JSON schema)
     pub className: String,
     /// Namespace (optional, inferred from file path)
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -59,6 +60,7 @@ impl ModelInferrer {
         facts: &Facts,
     ) -> Result<InferredModel, String> {
         // Infer className from cluster samples or placeholders
+        #[allow(non_snake_case)]
         let className = self.infer_class_name(synthesis, cluster, facts)?;
 
         // Infer namespace from base sample file path

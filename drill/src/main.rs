@@ -9,6 +9,7 @@ mod parser;
 mod report;
 mod scanner;
 mod template_synthesis;
+mod template_validator;
 mod unknown_discovery;
 
 use anyhow::{Context, Result};
@@ -148,16 +149,16 @@ fn run() -> Result<()> {
             println!("  Parse errors: {}", parse_summary.failed);
             println!("  No parser available: {}", parse_summary.no_parser);
 
-            // Extract facts and write to .hixdrill/facts.json
+            // Extract facts and write to .hix/drill/facts.json
             let extractor = Extractor::new();
             let mut facts = extractor.extract_facts(&files, &parse_results, &file_contents);
             
             // Ensure deterministic ordering
             facts.sort();
             
-            let facts_path = repo_path.join(".hixdrill").join("facts.json");
+            let facts_path = repo_path.join(".hix").join("drill").join("facts.json");
             fs::create_dir_all(facts_path.parent().unwrap())
-                .with_context(|| "Failed to create .hixdrill directory")?;
+                .with_context(|| "Failed to create .hix/drill directory")?;
             
             let facts_json = serde_json::to_string_pretty(&facts)
                 .with_context(|| "Failed to serialize facts to JSON")?;
@@ -284,9 +285,9 @@ fn run() -> Result<()> {
                                 }
 
                                 // Write matches.json
-                                let matches_path = repo_path.join(".hixdrill").join("matches.json");
+                                let matches_path = repo_path.join(".hix").join("drill").join("matches.json");
                                 fs::create_dir_all(matches_path.parent().unwrap())
-                                    .with_context(|| "Failed to create .hixdrill directory")?;
+                                    .with_context(|| "Failed to create .hix/drill directory")?;
                                 
                                 let matches_json = serde_json::to_string_pretty(&match_results)
                                     .with_context(|| "Failed to serialize matches to JSON")?;
@@ -306,7 +307,7 @@ fn run() -> Result<()> {
                                 );
 
                                 // Write unknowns.json
-                                let unknowns_path = repo_path.join(".hixdrill").join("unknowns.json");
+                                let unknowns_path = repo_path.join(".hix").join("drill").join("unknowns.json");
                                 let unknowns_json = serde_json::to_string_pretty(&unknown_discovery)
                                     .with_context(|| "Failed to serialize unknowns to JSON")?;
                                 
@@ -319,7 +320,7 @@ fn run() -> Result<()> {
                                 // Synthesize templates for top clusters (v1: top 3)
                                 if !unknown_discovery.clusters.is_empty() {
                                     let synthesizer = TemplateSynthesizer::new();
-                                    let synthesis_dir = repo_path.join(".hixdrill").join("synthesis");
+                                    let synthesis_dir = repo_path.join(".hix").join("drill").join("synthesis");
                                     fs::create_dir_all(&synthesis_dir)
                                         .with_context(|| "Failed to create synthesis directory")?;
 
@@ -350,37 +351,39 @@ fn run() -> Result<()> {
                                                     sample_files,
                                                 };
 
-                                                // Write synthesis files
-                                                match synthesizer.write_synthesis(&result, &metadata, &cluster_dir) {
-                                                    Ok(_) => {
-                                                        println!("  ✓ Synthesized template for {}: {}", 
-                                                            cluster.cluster_id, result.template_name);
-                                                        
-                                                        // Infer model from synthesis
-                                                        let inferrer = ModelInferrer::new();
-                                                        match inferrer.infer_model(&metadata, cluster, &facts) {
-                                                            Ok(model) => {
-                                                                // Write model.json
-                                                                let model_path = cluster_dir.join("model.json");
-                                                                match inferrer.write_model(&model, &model_path) {
+                                                // Infer model from synthesis first (needed for Hix syntax conversion)
+                                                let inferrer = ModelInferrer::new();
+                                                match inferrer.infer_model(&metadata, cluster, &facts) {
+                                                    Ok(model) => {
+                                                        // Write model.json
+                                                        let model_path = cluster_dir.join("model.json");
+                                                        match inferrer.write_model(&model, &model_path) {
+                                                            Ok(_) => {
+                                                                println!("  ✓ Inferred model for {}: {}", 
+                                                                    cluster.cluster_id, model.className);
+                                                                
+                                                                // Write synthesis files with Hix syntax conversion
+                                                                match synthesizer.write_synthesis_with_hix_syntax(
+                                                                    &result, &metadata, &model, &cluster_dir
+                                                                ) {
                                                                     Ok(_) => {
-                                                                        println!("  ✓ Inferred model for {}: {}", 
-                                                                            cluster.cluster_id, model.className);
+                                                                        println!("  ✓ Synthesized template for {}: {}", 
+                                                                            cluster.cluster_id, result.template_name);
                                                                     }
                                                                     Err(e) => {
-                                                                        eprintln!("  ✗ Failed to write model for {}: {}", 
+                                                                        eprintln!("  ✗ Failed to write synthesis for {}: {}", 
                                                                             cluster.cluster_id, e);
                                                                     }
                                                                 }
                                                             }
                                                             Err(e) => {
-                                                                eprintln!("  ✗ Failed to infer model for {}: {}", 
+                                                                eprintln!("  ✗ Failed to write model for {}: {}", 
                                                                     cluster.cluster_id, e);
                                                             }
                                                         }
                                                     }
                                                     Err(e) => {
-                                                        eprintln!("  ✗ Failed to write synthesis for {}: {}", 
+                                                        eprintln!("  ✗ Failed to infer model for {}: {}", 
                                                             cluster.cluster_id, e);
                                                     }
                                                 }
@@ -394,7 +397,7 @@ fn run() -> Result<()> {
                                 }
 
                                 // Write report.json
-                                let report_json_path = repo_path.join(".hixdrill").join("report.json");
+                                let report_json_path = repo_path.join(".hix").join("drill").join("report.json");
                                 let report_json = serde_json::to_string_pretty(&report)
                                     .with_context(|| "Failed to serialize report to JSON")?;
                                 
@@ -403,7 +406,7 @@ fn run() -> Result<()> {
 
                                 // Write report.md
                                 let report_md = report_generator.generate_markdown(&report);
-                                let report_md_path = repo_path.join(".hixdrill").join("report.md");
+                                let report_md_path = repo_path.join(".hix").join("drill").join("report.md");
                                 fs::write(&report_md_path, report_md)
                                     .with_context(|| format!("Failed to write report.md to {:?}", report_md_path))?;
 

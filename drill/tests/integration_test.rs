@@ -1,6 +1,7 @@
 use std::fs;
 use std::path::Path;
 use std::process::Command;
+use regex::Regex;
 
 #[test]
 fn test_init_golden() {
@@ -10,7 +11,7 @@ fn test_init_golden() {
     
     // Clean up any previous test runs
     let hix_dir = src_dir.join(".hix");
-    let hixdrill_dir = src_dir.join(".hixdrill");
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
     let _ = fs::remove_dir_all(&hix_dir);
     let _ = fs::remove_dir_all(&hixdrill_dir);
     
@@ -81,9 +82,9 @@ fn test_analyze_golden() {
     let src_dir = fixture_dir.join("src");
     let packs_dir = fixture_dir.join("packs");
     
-    // Clean up any previous test runs (both .hix and .hixdrill)
+    // Clean up any previous test runs
     let hix_dir = src_dir.join(".hix");
-    let hixdrill_dir = src_dir.join(".hixdrill");
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
     let _ = fs::remove_dir_all(&hix_dir);
     let _ = fs::remove_dir_all(&hixdrill_dir);
     
@@ -227,7 +228,7 @@ fn test_scan_golden() {
     let src_dir = fixture_dir.join("src");
     
     // Clean up any previous test runs
-    let hixdrill_dir = src_dir.join(".hixdrill");
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
     let _ = fs::remove_dir_all(&hixdrill_dir);
     
     // Run scan command
@@ -288,7 +289,7 @@ fn test_synthesis_golden() {
     let packs_dir = fixture_dir.join("packs");
     
     // Clean up any previous test runs
-    let hixdrill_dir = src_dir.join(".hixdrill");
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
     let _ = fs::remove_dir_all(&hixdrill_dir);
     
     // Run analyze command to generate synthesis files
@@ -425,7 +426,7 @@ fn test_model_inference_golden() {
     let packs_dir = fixture_dir.join("packs");
     
     // Clean up any previous test runs
-    let hixdrill_dir = src_dir.join(".hixdrill");
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
     let _ = fs::remove_dir_all(&hixdrill_dir);
     
     // Run analyze command to generate model.json files
@@ -501,6 +502,94 @@ fn test_model_inference_golden() {
                     cluster_name
                 );
             }
+        }
+    }
+}
+
+#[test]
+fn test_template_syntax_validation() {
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+    
+    // Clean up any previous test runs
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
+    let _ = fs::remove_dir_all(&hixdrill_dir);
+    
+    // Run analyze command to generate templates
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "analyze",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+        ])
+        .output()
+        .expect("Failed to execute analyze command");
+    
+    // Check command succeeded
+    assert!(
+        output.status.success(),
+        "Analyze command failed:\nSTDOUT:\n{}\nSTDERR:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    
+    // Find all generated .hix template files
+    let synthesis_dir = hixdrill_dir.join("synthesis");
+    if synthesis_dir.exists() {
+        let mut template_files: Vec<std::path::PathBuf> = Vec::new();
+        find_template_files(&synthesis_dir, &mut template_files);
+        
+        fn find_template_files(dir: &Path, files: &mut Vec<std::path::PathBuf>) {
+            if let Ok(entries) = fs::read_dir(dir) {
+                for entry in entries {
+                    if let Ok(entry) = entry {
+                        let path = entry.path();
+                        if path.is_file() && path.extension() == Some(std::ffi::OsStr::new("hix")) {
+                            files.push(path);
+                        } else if path.is_dir() {
+                            find_template_files(&path, files);
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Validate each template
+        for template_path in &template_files {
+            let template_content = fs::read_to_string(&template_path)
+                .expect("Failed to read template file");
+            
+            // Basic validation: tag balance
+            let open_tags = template_content.matches("[[").count();
+            let close_tags = template_content.matches("]]").count();
+            
+            assert_eq!(
+                open_tags, close_tags,
+                "Template {} has tag imbalance: {} opening tags, {} closing tags\nTemplate content:\n{}",
+                template_path.display(),
+                open_tags,
+                close_tags,
+                template_content
+            );
+            
+            // Check for invalid placeholder patterns (like [[Placeholder1]])
+            // Valid Hix tags should be: model.*, prop.*, prop, /prop, if, else, /if, or function calls
+            let invalid_pattern = Regex::new(r"\[\[Placeholder\d+\]\]|\[\[Identifier\d+\]\]").unwrap();
+            assert!(
+                !invalid_pattern.is_match(&template_content),
+                "Template {} contains invalid placeholder syntax (should use model.* or prop.*):\n{}",
+                template_path.display(),
+                template_content
+            );
+        }
+        
+        // If we found templates, at least one should exist
+        if !template_files.is_empty() {
+            println!("Validated {} template file(s)", template_files.len());
         }
     }
 }
