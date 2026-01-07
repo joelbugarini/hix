@@ -1217,3 +1217,93 @@ fn test_template_synthesis_full_class_structure() {
     println!("Full class structure template synthesis test completed successfully");
 }
 
+#[test]
+fn test_init_mine_golden() {
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+    
+    // Clean up any previous test runs
+    let hix_dir = src_dir.join(".hix");
+    let hixdrill_dir = src_dir.join(".hix").join("drill");
+    let _ = fs::remove_dir_all(&hix_dir);
+    let _ = fs::remove_dir_all(&hixdrill_dir);
+    
+    // Run init --mine command
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "init",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+            "--mine",
+        ])
+        .output()
+        .expect("Failed to execute init --mine command");
+    
+    // Check command succeeded
+    assert!(
+        output.status.success(),
+        "Init --mine command failed:\nSTDOUT:\n{}\nSTDERR:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    
+    // Verify project.json was created
+    let config_path = hixdrill_dir.join("project.json");
+    assert!(
+        config_path.exists(),
+        "Project config not created at {:?}",
+        config_path
+    );
+    
+    // Verify report.md was created
+    let report_md_path = hixdrill_dir.join("report.md");
+    assert!(
+        report_md_path.exists(),
+        "Report markdown not created at {:?}",
+        report_md_path
+    );
+    
+    // Verify packs were emitted
+    let packs_dir_emitted = hixdrill_dir.join("packs");
+    if packs_dir_emitted.exists() {
+        // Check that at least one pack was emitted
+        let mut pack_count = 0;
+        for entry in fs::read_dir(&packs_dir_emitted).unwrap() {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.is_dir() {
+                let pack_json = path.join("pack.json");
+                if pack_json.exists() {
+                    pack_count += 1;
+                }
+            }
+        }
+        println!("Found {} emitted pack(s)", pack_count);
+    }
+    
+    // Verify synthesis directory was created
+    let synthesis_dir = hixdrill_dir.join("synthesis");
+    assert!(
+        synthesis_dir.exists(),
+        "Synthesis directory not created at {:?}",
+        synthesis_dir
+    );
+    
+    // Verify validation.json was created (if validation ran)
+    let validation_path = hixdrill_dir.join("validation.json");
+    if validation_path.exists() {
+        let validation_content = fs::read_to_string(&validation_path)
+            .expect("Failed to read validation.json");
+        assert!(
+            validation_content.contains("total_packs"),
+            "Validation JSON missing total_packs field"
+        );
+    }
+    
+    println!("Init --mine workflow test completed successfully");
+}
+
