@@ -18,6 +18,9 @@ pub struct PackMetadata {
     /// Pack author
     #[serde(skip_serializing_if = "Option::is_none")]
     pub author: Option<String>,
+    /// Whether this pack was created with AI assistance
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub assisted: Option<bool>,
 }
 
 /// Pattern match rule

@@ -1,67 +1,62 @@
-# hix-drill Integration Tests
-
-This directory contains integration tests using golden files (snapshot tests) to ensure deterministic output and prevent regressions.
-
-## Test Structure
-
-```
-tests/
-├── integration_test.rs          # Integration tests
-└── fixtures/
-    └── sample-repo/             # Test fixture repository
-        ├── src/                 # Sample source code
-        ├── packs/               # Pattern packs for testing
-        └── golden/             # Expected output files (golden files)
-            ├── project.json     # Expected init output
-            ├── matches.json     # Expected matches output
-            └── report.json      # Expected report output
-```
+# Integration Tests
 
 ## Running Tests
 
 ```bash
-# Run all integration tests
-cargo test --test integration_test
+# Run all tests
+cargo test
 
 # Run specific test
-cargo test --test integration_test test_init_golden
+cargo test test_ai_config_file
+
+# Run tests with output
+cargo test -- --nocapture
+
+# Run ignored tests (requires API key)
+cargo test -- --ignored
 ```
 
-## Golden Files
+## AI Assistance Tests
 
-Golden files are the expected output files that serve as the "truth" for what the tool should produce. When tests run:
+### Setting API Key for Testing
 
-1. **First run**: If a golden file doesn't exist, it's created from the actual output
-2. **Subsequent runs**: Actual output is compared against the golden file
-3. **Mismatch**: Test fails if output doesn't match golden file
+There are two ways to set the API key for testing:
 
-## Updating Golden Files
+1. **Test-Specific Environment Variable (Recommended for CI/CD)**:
+   ```bash
+   export HIX_DRILL_TEST_AI_API_KEY=your-api-key-here
+   cargo test test_ai_assistance_integration -- --ignored
+   ```
 
-If you intentionally change the output format, update the golden files:
+2. **Regular Environment Variable**:
+   ```bash
+   export HIX_DRILL_AI_API_KEY=your-api-key-here
+   cargo test test_ai_assistance_integration -- --ignored
+   ```
+
+The `HIX_DRILL_TEST_AI_API_KEY` takes precedence over `HIX_DRILL_AI_API_KEY` for testing purposes. This allows you to use a different API key for testing than for regular use.
+
+### Test Categories
+
+- **Unit Tests**: Test individual modules (run with `cargo test --lib`)
+- **Integration Tests**: Test full workflows (run with `cargo test`)
+- **Ignored Tests**: Tests that require API keys (run with `cargo test -- --ignored`)
+
+### AI Tests
+
+- `test_ai_config_file`: Tests AI config file creation and reading (no API key required)
+- `test_ai_assistance_integration`: Tests full AI assistance workflow (requires API key, marked with `#[ignore]`)
+- `test_init_mine_without_assist`: Tests that mining works without AI assistance (no API key required)
+
+### Example: Running AI Tests
 
 ```bash
-# Delete golden files to regenerate them
-rm tests/fixtures/sample-repo/golden/*.json
+# Set test API key
+export HIX_DRILL_TEST_AI_API_KEY=sk-...
 
-# Run tests again (they will create new golden files)
-cargo test --test integration_test
+# Run all tests including ignored ones
+cargo test -- --ignored
+
+# Or run just the AI integration test
+cargo test test_ai_assistance_integration -- --ignored --nocapture
 ```
-
-## Test Coverage
-
-- **test_init_golden**: Tests `hix-drill init` command
-  - Verifies `.hix/drill/project.json` is created
-  - Compares against golden file
-
-- **test_analyze_golden**: Tests `hix-drill analyze` command
-  - Verifies `.hix/drill/matches.json` is created
-  - Verifies `.hix/drill/report.json` is created
-  - Compares against golden files
-
-## Adding New Tests
-
-1. Add test fixture code to `tests/fixtures/sample-repo/src/`
-2. Add pattern packs to `tests/fixtures/sample-repo/packs/`
-3. Run the test once to generate golden files
-4. Review and commit the golden files
-

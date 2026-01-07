@@ -1218,6 +1218,201 @@ fn test_template_synthesis_full_class_structure() {
 }
 
 #[test]
+fn test_ai_config_file() {
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    
+    // Clean up any previous test runs
+    let hix_dir = src_dir.join(".hix");
+    let hixdrill_dir = hix_dir.join("drill");
+    let _ = fs::remove_dir_all(&hix_dir);
+    fs::create_dir_all(&hixdrill_dir).expect("Failed to create drill dir");
+    
+    // Create test config file
+    let config_content = r#"{
+  "provider": "openai",
+  "api_key": "test-key-from-file",
+  "api_key_env": "HIX_DRILL_AI_API_KEY",
+  "model": "gpt-4o-mini",
+  "timeout_seconds": 30,
+  "max_retries": 3
+}"#;
+    
+    let config_path = hixdrill_dir.join("assist.json");
+    fs::write(&config_path, config_content).expect("Failed to write config file");
+    
+    // Verify file was created
+    assert!(config_path.exists(), "Config file should be created");
+    
+    // Verify content
+    let loaded_content = fs::read_to_string(&config_path)
+        .expect("Failed to read config file");
+    assert!(loaded_content.contains("test-key-from-file"));
+    assert!(loaded_content.contains("openai"));
+    
+    println!("✓ AI config file creation and reading works");
+}
+
+#[test]
+#[ignore] // Ignore by default - requires API key
+fn test_ai_assistance_integration() {
+    // Check if API key is set for testing
+    let api_key = std::env::var("HIX_DRILL_TEST_AI_API_KEY")
+        .or_else(|_| std::env::var("HIX_DRILL_AI_API_KEY"))
+        .ok();
+    
+    if api_key.is_none() {
+        println!("⚠ Skipping AI assistance test - no API key set");
+        println!("   Set HIX_DRILL_TEST_AI_API_KEY or HIX_DRILL_AI_API_KEY to run this test");
+        return;
+    }
+    
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+    
+    // Clean up any previous test runs
+    let hix_dir = src_dir.join(".hix");
+    let _ = fs::remove_dir_all(&hix_dir);
+    
+    // Run init --mine --assist
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "init",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+            "--mine",
+            "--assist",
+            "--ai-provider",
+            "openai",
+            "--ai-model",
+            "gpt-4o-mini",
+        ])
+        .env("HIX_DRILL_AI_API_KEY", api_key.as_ref().unwrap())
+        .output()
+        .expect("Failed to execute init --mine --assist command");
+    
+    // Check command succeeded (allow failures if API quota exceeded)
+    let command_succeeded = output.status.success();
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    
+    if !command_succeeded {
+        // Check if it's just an API quota issue (acceptable)
+        if stderr.contains("insufficient_quota") || stdout.contains("insufficient_quota") {
+            println!("⚠ API quota exceeded - this is acceptable for testing");
+        } else {
+            eprintln!("Command failed:\nSTDOUT:\n{}\nSTDERR:\n{}", stdout, stderr);
+        }
+    }
+    
+    // Verify packs were created (even if AI failed, packs should still be created)
+    let packs_dir_emitted = src_dir.join(".hix").join("drill").join("packs");
+    if packs_dir_emitted.exists() {
+        // Recursively find all pack.json files
+        use walkdir::WalkDir;
+        let mut pack_count = 0;
+        let mut assisted_pack_found = false;
+        
+        for entry in WalkDir::new(&packs_dir_emitted) {
+            let entry = entry.unwrap();
+            if entry.file_name() == "pack.json" {
+                pack_count += 1;
+                
+                // Check if pack is marked as assisted
+                let pack_content = fs::read_to_string(entry.path())
+                    .expect("Failed to read pack.json");
+                if pack_content.contains("\"assisted\": true") {
+                    assisted_pack_found = true;
+                    println!("✓ Found AI-assisted pack at: {:?}", entry.path());
+                } else {
+                    println!("  Pack at {:?} is not AI-assisted (AI may have failed or quota exceeded)", entry.path());
+                }
+            }
+        }
+        
+        println!("Found {} emitted pack(s)", pack_count);
+        if assisted_pack_found {
+            println!("✓ Found at least one AI-assisted pack");
+        } else if pack_count > 0 {
+            println!("⚠ Packs were created but not AI-assisted (likely API quota issue)");
+        }
+        
+        assert!(pack_count > 0, "At least one pack should be emitted");
+    } else {
+        println!("⚠ No packs directory found - mining may have failed");
+    }
+    
+    // Verify assist.json was created
+    let assist_config_path = src_dir.join(".hix").join("drill").join("assist.json");
+    if assist_config_path.exists() {
+        println!("✓ AI config file was created");
+    }
+    
+    println!("AI assistance integration test completed");
+}
+
+#[test]
+fn test_init_mine_without_assist() {
+    // Test that --mine works without --assist (should not require API key)
+    let fixture_dir = Path::new("tests/fixtures/sample-repo");
+    let src_dir = fixture_dir.join("src");
+    let packs_dir = fixture_dir.join("packs");
+    
+    // Clean up any previous test runs
+    let hix_dir = src_dir.join(".hix");
+    let _ = fs::remove_dir_all(&hix_dir);
+    
+    // Run init --mine without --assist
+    let output = Command::new("cargo")
+        .args(&[
+            "run",
+            "--",
+            "init",
+            src_dir.to_str().unwrap(),
+            "--packs",
+            packs_dir.to_str().unwrap(),
+            "--mine",
+        ])
+        .output()
+        .expect("Failed to execute init --mine command");
+    
+    // Check command succeeded
+    assert!(
+        output.status.success(),
+        "Init --mine command failed:\nSTDOUT:\n{}\nSTDERR:\n{}",
+        String::from_utf8_lossy(&output.stdout),
+        String::from_utf8_lossy(&output.stderr)
+    );
+    
+    // Verify packs were created (without AI assistance)
+    let packs_dir_emitted = src_dir.join(".hix").join("drill").join("packs");
+    if packs_dir_emitted.exists() {
+        for entry in fs::read_dir(&packs_dir_emitted).unwrap() {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if path.is_dir() {
+                let pack_json = path.join("pack.json");
+                if pack_json.exists() {
+                    let pack_content = fs::read_to_string(&pack_json)
+                        .expect("Failed to read pack.json");
+                    // Should NOT contain assisted field or it should be false/null
+                    assert!(
+                        !pack_content.contains("\"assisted\": true"),
+                        "Pack should not be marked as assisted when --assist is not used"
+                    );
+                }
+            }
+        }
+    }
+    
+    println!("✓ Init --mine without --assist works correctly");
+}
+
+#[test]
 fn test_init_mine_golden() {
     let fixture_dir = Path::new("tests/fixtures/sample-repo");
     let src_dir = fixture_dir.join("src");

@@ -1,3 +1,5 @@
+mod ai_assistant;
+mod ai_config;
 mod extractor;
 mod facts;
 mod init_writer;
@@ -28,6 +30,8 @@ use template_synthesis::{SynthesisMetadata, TemplateSynthesizer};
 use model_inference::ModelInferrer;
 use validator::Validator;
 use unknown_discovery::UnknownDiscoverer;
+use ai_config::AiConfig;
+use ai_assistant::AiAssistant;
 use std::collections::HashMap;
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -72,6 +76,21 @@ enum Commands {
         /// Only mine specified language (e.g., "csharp", "typescript")
         #[arg(long)]
         mine_language: Option<String>,
+        /// Enable AI assistance for pack creation (requires API key)
+        #[arg(long)]
+        assist: bool,
+        /// AI provider (openai, anthropic, ollama, custom)
+        #[arg(long)]
+        ai_provider: Option<String>,
+        /// AI API key (or use env var HIX_DRILL_AI_API_KEY)
+        #[arg(long)]
+        ai_key: Option<String>,
+        /// AI API URL (for custom providers or Ollama)
+        #[arg(long)]
+        ai_url: Option<String>,
+        /// AI model name
+        #[arg(long)]
+        ai_model: Option<String>,
     },
     /// Validate mined packs against repository
     Validate {
@@ -406,6 +425,7 @@ fn run() -> Result<()> {
                                                                             &facts,
                                                                             repo_path,
                                                                             &packs_dir,
+                                                                            None, // No AI assistance in analyze command
                                                                         ) {
                                                                             Ok(pack_path) => {
                                                                                 println!("  ✓ Emitted pack for {}: {:?}", 
@@ -475,7 +495,7 @@ fn run() -> Result<()> {
 
             println!("\nAnalysis complete");
         }
-        Some(Commands::Init { path, packs, mine, mine_limit, mine_language }) => {
+        Some(Commands::Init { path, packs, mine, mine_limit, mine_language, assist, ai_provider, ai_key, ai_url, ai_model }) => {
             let repo_path = Path::new(path);
             
             if !repo_path.exists() {
@@ -489,6 +509,39 @@ fn run() -> Result<()> {
             if *mine {
                 // Mining workflow: full pipeline
                 println!("🔍 Starting mining workflow...\n");
+                
+                // Load AI configuration if --assist is enabled
+                let ai_config = if *assist {
+                    match AiConfig::load(
+                        repo_path,
+                        ai_provider.as_deref(),
+                        ai_key.as_deref(),
+                        ai_url.as_deref(),
+                        ai_model.as_deref(),
+                    ) {
+                        Ok(Some(config)) => {
+                            println!("🤖 AI assistance enabled (provider: {}, model: {})", 
+                                config.provider, config.model);
+                            Some(config)
+                        }
+                        Ok(None) => {
+                            println!("⚠ AI assistance requested but no API key found.");
+                            println!("   Run setup wizard or set HIX_DRILL_AI_API_KEY environment variable.");
+                            if let Ok(Some(config)) = AiConfig::setup_wizard(repo_path) {
+                                Some(config)
+                            } else {
+                                println!("   Continuing without AI assistance...");
+                                None
+                            }
+                        }
+                        Err(e) => {
+                            eprintln!("⚠ Failed to load AI config: {}. Continuing without AI assistance...", e);
+                            None
+                        }
+                    }
+                } else {
+                    None
+                };
                 
                 // Step 1: Scan repository
                 println!("[1/7] Scanning repository...");
@@ -646,7 +699,31 @@ fn run() -> Result<()> {
                 let mut emitted_packs: Vec<PathBuf> = Vec::new();
                 let mut successful_clusters = 0;
 
+                // Create AI assistant if configured
+                let ai_assistant = ai_config.as_ref().map(|config| {
+                    AiAssistant::new(config.clone())
+                });
+
                 for cluster in &clusters_to_mine {
+                    // Get AI suggestions if available
+                    let ai_suggestion: Option<ai_assistant::PackSuggestion> = if let Some(ref assistant) = ai_assistant {
+                        println!("  🤖 Getting AI suggestions for cluster {}...", cluster.cluster_id);
+                        // Use tokio runtime for async AI calls
+                        let rt = tokio::runtime::Runtime::new().unwrap();
+                        let result: Result<ai_assistant::PackSuggestion, anyhow::Error> = rt.block_on(assistant.suggest_pack(cluster, &facts));
+                        match result {
+                            Ok(suggestion) => {
+                                println!("    ✓ AI suggested pack name: {}", suggestion.name);
+                                Some(suggestion)
+                            }
+                            Err(e) => {
+                                eprintln!("    ⚠ AI suggestion failed: {}. Using defaults.", e);
+                                None
+                            }
+                        }
+                    } else {
+                        None
+                    };
                     match synthesizer.synthesize(cluster, &facts, repo_path) {
                         Ok(result) => {
                             let cluster_dir = synthesis_dir.join(&cluster.cluster_id);
@@ -677,7 +754,7 @@ fn run() -> Result<()> {
                                             &result, &metadata, &model, &cluster_dir
                                         ) {
                                             Ok(_) => {
-                                                // Emit pack
+                                                // Emit pack (with AI suggestion if available)
                                                 match pack_emitter.emit_pack(
                                                     &metadata,
                                                     cluster,
@@ -685,6 +762,7 @@ fn run() -> Result<()> {
                                                     &facts,
                                                     repo_path,
                                                     &packs_output_dir,
+                                                    ai_suggestion.as_ref(),
                                                 ) {
                                                     Ok(pack_path) => {
                                                         emitted_packs.push(pack_path);

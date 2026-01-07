@@ -27,9 +27,19 @@ impl PackEmitter {
         facts: &Facts,
         project_root: &Path,
         output_dir: &Path,
+        ai_suggestion: Option<&crate::ai_assistant::PackSuggestion>,
     ) -> Result<PathBuf> {
-        // Determine pack name: mined/<language>/<cluster-id>
-        let pack_name = format!("mined/{}/{}", synthesis.language, cluster.cluster_id);
+        // Determine pack name: use AI suggestion or default
+        let pack_name = if let Some(suggestion) = ai_suggestion {
+            // Use AI-suggested name, but sanitize it
+            let sanitized = suggestion.name
+                .to_lowercase()
+                .replace(' ', "-")
+                .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_', "");
+            format!("mined/{}/{}", synthesis.language, sanitized)
+        } else {
+            format!("mined/{}/{}", synthesis.language, cluster.cluster_id)
+        };
         let pack_dir = output_dir.join(&pack_name);
 
         // Create pack directory structure
@@ -37,7 +47,7 @@ impl PackEmitter {
             .with_context(|| format!("Failed to create pack directory: {:?}", pack_dir))?;
 
         // 1. Generate pack.json
-        let pack_metadata = self.generate_pack_metadata(synthesis, cluster, model);
+        let pack_metadata = self.generate_pack_metadata(synthesis, cluster, model, ai_suggestion);
         let pack_json_path = pack_dir.join("pack.json");
         let pack_json = serde_json::to_string_pretty(&pack_metadata)
             .with_context(|| "Failed to serialize pack.json")?;
@@ -45,7 +55,7 @@ impl PackEmitter {
             .with_context(|| format!("Failed to write pack.json to {:?}", pack_json_path))?;
 
         // 2. Generate pattern.json
-        let pattern_rule = self.generate_pattern_rule(cluster, facts, &synthesis.language);
+        let pattern_rule = self.generate_pattern_rule(cluster, facts, &synthesis.language, ai_suggestion);
         let pattern_json_path = pack_dir.join("pattern.json");
         let pattern_json = serde_json::to_string_pretty(&vec![pattern_rule])
             .with_context(|| "Failed to serialize pattern.json")?;
@@ -139,20 +149,34 @@ impl PackEmitter {
         synthesis: &SynthesisMetadata,
         cluster: &SymbolCluster,
         _model: &InferredModel,
+        ai_suggestion: Option<&crate::ai_assistant::PackSuggestion>,
     ) -> PackMetadata {
-        let description = format!(
-            "Mined pattern from {} cluster ({} samples). Generated from {}.",
-            cluster.cluster_id,
-            cluster.size,
-            synthesis.base_sample_file
-        );
+        let (name, description) = if let Some(suggestion) = ai_suggestion {
+            // Use AI-suggested name and description
+            let sanitized_name = suggestion.name
+                .to_lowercase()
+                .replace(' ', "-")
+                .replace(|c: char| !c.is_alphanumeric() && c != '-' && c != '_', "");
+            (sanitized_name, suggestion.description.clone())
+        } else {
+            // Default name and description
+            let default_name = format!("mined-{}-{}", synthesis.language, cluster.cluster_id);
+            let default_desc = format!(
+                "Mined pattern from {} cluster ({} samples). Generated from {}.",
+                cluster.cluster_id,
+                cluster.size,
+                synthesis.base_sample_file
+            );
+            (default_name, default_desc)
+        };
 
         PackMetadata {
             schema_version: PACK_SCHEMA_VERSION.to_string(),
-            name: format!("mined-{}-{}", synthesis.language, cluster.cluster_id),
+            name,
             version: "1.0.0".to_string(),
             description: Some(description),
             author: Some("hix-drill".to_string()),
+            assisted: if ai_suggestion.is_some() { Some(true) } else { None },
         }
     }
 
@@ -162,6 +186,7 @@ impl PackEmitter {
         cluster: &SymbolCluster,
         facts: &Facts,
         language: &str,
+        ai_suggestion: Option<&crate::ai_assistant::PackSuggestion>,
     ) -> PatternRule {
         // Use the fingerprint's kind, which is more accurate
         let mut symbol_kind = cluster.fingerprint.kind.clone();
@@ -212,25 +237,48 @@ impl PackEmitter {
             }
         }
 
-        // Build match conditions
-        let mut match_conditions = serde_json::Map::new();
-        match_conditions.insert("symbol_kind".to_string(), json!(symbol_kind));
-        
-        if !member_predicates.is_empty() {
-            match_conditions.insert("member_predicates".to_string(), json!(member_predicates));
-        }
-        
-        match_conditions.insert("language".to_string(), json!(vec![language]));
+        // Use AI-suggested pattern rules if available, otherwise build from cluster
+        let (match_conditions, description, rule_name) = if let Some(suggestion) = ai_suggestion {
+            // Use AI-suggested pattern rules
+            let mut conditions = suggestion.pattern_rules.as_object()
+                .cloned()
+                .unwrap_or_else(|| {
+                    let mut m = serde_json::Map::new();
+                    m.insert("symbol_kind".to_string(), json!(symbol_kind));
+                    m.insert("language".to_string(), json!(vec![language]));
+                    m
+                });
+            
+            // Ensure language is set
+            if !conditions.contains_key("language") {
+                conditions.insert("language".to_string(), json!(vec![language]));
+            }
+            
+            let rule_name = format!("{}-pattern", suggestion.name.to_lowercase().replace(' ', "-"));
+            (conditions, suggestion.description.clone(), rule_name)
+        } else {
+            // Build match conditions from cluster
+            let mut match_conditions = serde_json::Map::new();
+            match_conditions.insert("symbol_kind".to_string(), json!(symbol_kind));
+            
+            if !member_predicates.is_empty() {
+                match_conditions.insert("member_predicates".to_string(), json!(member_predicates));
+            }
+            
+            match_conditions.insert("language".to_string(), json!(vec![language]));
 
-        let description = format!(
-            "Mined pattern from cluster {} ({} symbols, fingerprint: {})",
-            cluster.cluster_id,
-            cluster.size,
-            cluster.fingerprint.shape_hash
-        );
+            let description = format!(
+                "Mined pattern from cluster {} ({} symbols, fingerprint: {})",
+                cluster.cluster_id,
+                cluster.size,
+                cluster.fingerprint.shape_hash
+            );
+            let rule_name = format!("mined-{}", cluster.cluster_id);
+            (match_conditions, description, rule_name)
+        };
 
         PatternRule {
-            name: format!("mined-{}", cluster.cluster_id),
+            name: rule_name,
             description: Some(description),
             match_conditions: Some(json!(match_conditions)),
         }

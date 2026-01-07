@@ -6,6 +6,10 @@ authors = ["Joel Bugarini"]
 description = "CLI Codebase Analyzer for Hix"
 license = "GPL-2.0"
 
+[lib]
+name = "hix_drill"
+path = "src/lib.rs"
+
 [dependencies]
 clap = { version = "4.5", features = ["derive"] }
 serde = { version = "1.0", features = ["derive"] }
@@ -21,3 +25,5 @@ tree-sitter-python = "0.23"
 tree-sitter-c-sharp = "0.23"
 tree-sitter-html = "0.23"
 similar = "2.5"
+reqwest = { version = "0.12", features = ["json"] }
+tokio = { version = "1", features = ["full"] }

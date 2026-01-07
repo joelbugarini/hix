@@ -16,8 +16,8 @@
       "symbol_name": "getUsers",
       "file": "tests/fixtures/sample-repo/src/api.ts",
       "bindings": {
-        "function_name": "getUsers",
-        "http_naming": "true"
+        "http_naming": "true",
+        "function_name": "getUsers"
       }
     },
     {
@@ -26,8 +26,8 @@
       "symbol_name": "postUser",
       "file": "tests/fixtures/sample-repo/src/api.ts",
       "bindings": {
-        "http_naming": "true",
-        "function_name": "postUser"
+        "function_name": "postUser",
+        "http_naming": "true"
       }
     }
   ]

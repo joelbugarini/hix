@@ -59,3 +59,7 @@ site/
 
 # Rust build artifacts
 drill/target/
+
+# AI configuration (contains API keys)
+.hix/drill/assist.json
+**/.hix/drill/assist.json
